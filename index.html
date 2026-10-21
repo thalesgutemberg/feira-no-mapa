@@ -1,0 +1,1241 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Feira no Mapa</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
+<style>
+/* ============ TOKENS ============ */
+:root{
+  --bg:#FFFBF2; --surface:#FFFFFF; --surface-2:#F5EFE2;
+  --ink:#1C1A16; --ink-2:#4A4539; --ink-3:#6B6352;
+  --line:#E3DAC6; --line-strong:#7A715F;
+
+  --primary:#185C31; --primary-press:#0F4423; --primary-tint:#E1EFE4;
+  --accent:#C2410C; --accent-tint:#FDE9DD;
+  --sun:#F6C343; --sun-tint:#FFF4D6;
+  --info:#1D5FD1; --info-tint:#E3ECFB;
+  --success:#185C31; --success-tint:#E1EFE4;
+  --warning:#8A5A00; --warning-tint:#FFF4D6;
+  --error:#B42318; --error-tint:#FDE7E4;
+
+  --cat-horti:#2E7D32; --cat-horti-t:#E3F1E3;
+  --cat-comida:#C2410C; --cat-comida-t:#FBE6DA;
+  --cat-carnes:#9F1239; --cat-carnes-t:#F7DDE4;
+  --cat-arte:#6D28D9; --cat-arte-t:#ECE4FB;
+  --cat-outros:#475569; --cat-outros-t:#E5E9EF;
+
+  --font:'Atkinson Hyperlegible', system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s5:24px; --s6:32px; --s7:48px;
+  --r-sm:8px; --r-md:12px; --r-lg:20px; --r-pill:999px;
+  --e1:0 1px 2px rgba(28,26,22,.14), 0 1px 1px rgba(28,26,22,.06);
+  --e2:0 6px 16px rgba(28,26,22,.16);
+  --e3:0 -8px 28px rgba(28,26,22,.20);
+  --touch:48px;
+}
+
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg); color:var(--ink); font:400 17px/26px var(--font); -webkit-font-smoothing:antialiased}
+button,input{font:inherit; color:inherit}
+:focus-visible{outline:3px solid var(--info); outline-offset:2px}
+svg.i{width:24px; height:24px; flex:none; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round}
+
+/* tipografia */
+.t-display{font-size:32px; line-height:38px; font-weight:700; letter-spacing:-.01em}
+.t-title{font-size:24px; line-height:30px; font-weight:700}
+.t-sub{font-size:20px; line-height:26px; font-weight:700}
+.t-body{font-size:17px; line-height:26px}
+.t-strong{font-size:17px; line-height:26px; font-weight:700}
+.t-caption{font-size:15px; line-height:20px; color:var(--ink-2)}
+
+/* toldo */
+.awning{height:28px; background:repeating-linear-gradient(90deg,var(--accent) 0 28px,#FFFBF2 28px 56px); position:relative}
+.awning::after{content:""; position:absolute; left:0; right:0; bottom:-12px; height:12px;
+  background:radial-gradient(circle at 14px 0,var(--accent) 13px,transparent 14px) 0 0/56px 12px repeat-x,
+             radial-gradient(circle at 42px 0,#FFFBF2 13px,transparent 14px) 0 0/56px 12px repeat-x}
+
+/* ============ PÁGINA ============ */
+.page-head{background:var(--surface); border-bottom:1px solid var(--line)}
+.page-head .inner{max-width:1240px; margin:0 auto; padding:28px 16px 0}
+.page-head h1{margin:0 0 4px}
+.page-head p{margin:0 0 16px; color:var(--ink-2); max-width:70ch}
+.tabs{display:flex; gap:4px}
+.tab{min-height:48px; padding:0 18px; border:0; background:none; font-weight:700; border-bottom:4px solid transparent; cursor:pointer; color:var(--ink-2)}
+.tab[aria-selected=true]{color:var(--ink); border-color:var(--primary)}
+main{max-width:1240px; margin:0 auto; padding:24px 16px 64px}
+.view{display:none} .view.active{display:block}
+
+.ds-section{margin:0 0 48px}
+.ds-section > h2{margin:0 0 6px}
+.ds-section > .lead{margin:0 0 20px; color:var(--ink-2); max-width:72ch}
+.why{background:var(--sun-tint); border-left:6px solid var(--sun); border-radius:var(--r-sm); padding:10px 14px; margin:16px 0 0; font-size:16px; line-height:24px; max-width:80ch}
+.why b{font-weight:700}
+.grid{display:grid; gap:16px}
+.g-swatch{grid-template-columns:repeat(auto-fill,minmax(170px,1fr))}
+.swatch{border:1px solid var(--line); border-radius:var(--r-md); overflow:hidden; background:var(--surface)}
+.swatch .chipcolor{height:72px}
+.swatch .meta{padding:10px 12px; font-size:15px; line-height:20px}
+.swatch .meta b{display:block; font-size:16px}
+.swatch code{font-size:13px; color:var(--ink-2)}
+
+table.contrast{border-collapse:collapse; width:100%; background:var(--surface); border:1px solid var(--line); border-radius:var(--r-md); overflow:hidden; font-size:15px}
+table.contrast th, table.contrast td{padding:10px 12px; border-bottom:1px solid var(--line); text-align:left; vertical-align:middle}
+table.contrast th{background:var(--surface-2); font-size:14px}
+.sample{display:inline-flex; align-items:center; min-height:36px; padding:0 12px; border-radius:var(--r-sm); font-weight:700}
+.lvl{display:inline-block; padding:2px 8px; border-radius:var(--r-pill); font-weight:700; font-size:13px}
+.lvl.aaa{background:var(--success-tint); color:var(--success)}
+.lvl.aa{background:var(--info-tint); color:var(--info)}
+.lvl.fail{background:var(--error-tint); color:var(--error)}
+.table-wrap{overflow-x:auto}
+
+.type-row{display:grid; grid-template-columns:160px 1fr; gap:16px; padding:14px 0; border-bottom:1px solid var(--line); align-items:baseline}
+.type-row .spec{font-size:14px; color:var(--ink-2); line-height:20px}
+.space-row{display:flex; align-items:center; gap:16px; padding:6px 0; font-size:15px}
+.space-row .bar{height:20px; background:var(--primary); border-radius:3px}
+.space-row code{width:90px}
+.shape-demo{display:flex; flex-wrap:wrap; gap:20px}
+.shape{width:140px; height:96px; background:var(--surface); border:1px solid var(--line); display:flex; align-items:flex-end; padding:10px; font-size:14px; line-height:18px}
+.icon-grid{grid-template-columns:repeat(auto-fill,minmax(110px,1fr))}
+.icon-cell{background:var(--surface); border:1px solid var(--line); border-radius:var(--r-md); padding:16px 8px 10px; display:flex; flex-direction:column; align-items:center; gap:8px; font-size:14px; color:var(--ink-2)}
+.icon-cell svg.i{width:32px; height:32px; color:var(--ink)}
+
+.comp{background:var(--surface); border:1px solid var(--line); border-radius:var(--r-lg); padding:20px; margin:0 0 20px}
+.comp h3{margin:0 0 4px; font-size:20px; line-height:26px}
+.comp > p{margin:0 0 16px; color:var(--ink-2); font-size:15px; line-height:22px}
+.states{display:flex; flex-wrap:wrap; gap:20px; align-items:flex-start}
+.state{display:flex; flex-direction:column; gap:8px; min-width:0}
+.state > .lbl{font-size:13px; font-weight:700; color:var(--ink-3); text-transform:uppercase; letter-spacing:.04em}
+
+/* ============ COMPONENTES ============ */
+.btn{min-height:52px; padding:0 20px; border-radius:var(--r-md); font-weight:700; font-size:17px; line-height:1; display:inline-flex; align-items:center; justify-content:center; gap:8px; border:2px solid transparent; cursor:pointer; transition:background .12s, transform .06s; text-decoration:none}
+.btn-block{width:100%}
+.btn-primary{background:var(--primary); color:#fff}
+.btn-primary:active,.btn-primary.is-pressed{background:var(--primary-press); transform:translateY(1px)}
+.btn-secondary{background:var(--surface); color:var(--primary); border-color:var(--primary)}
+.btn-secondary:active,.btn-secondary.is-pressed{background:var(--primary-tint); transform:translateY(1px)}
+.btn-ghost{background:transparent; color:var(--primary); text-decoration:underline; text-underline-offset:4px; text-decoration-thickness:2px}
+.btn-ghost:active,.btn-ghost.is-pressed{background:var(--primary-tint)}
+.btn-danger{background:var(--error); color:#fff}
+.btn:disabled{background:#E7E1D3; color:var(--ink-3); border-color:transparent; cursor:not-allowed; transform:none; text-decoration:none}
+.btn.is-loading{pointer-events:none}
+.spinner{width:20px; height:20px; border-radius:50%; border:3px solid currentColor; border-right-color:transparent; animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.icon-btn{width:48px; height:48px; border-radius:50%; border:0; background:transparent; display:inline-flex; align-items:center; justify-content:center; cursor:pointer; flex:none}
+.icon-btn:active{background:var(--surface-2)}
+.icon-btn.raised{background:var(--surface); box-shadow:var(--e2)}
+
+.search{display:flex; align-items:center; gap:6px; height:52px; border:2px solid var(--line-strong); border-radius:var(--r-pill); background:#fff; padding:0 4px 0 14px; width:100%; color:var(--ink)}
+.search.is-focus,.search:focus-within{border-color:var(--primary); box-shadow:0 0 0 4px var(--primary-tint)}
+.search.is-error{border-color:var(--error)}
+.search input{border:0; flex:1; outline:none; background:transparent; min-width:0; font-size:17px; height:100%}
+.search input::placeholder{color:var(--ink-3)}
+.search .placeholder{flex:1; color:var(--ink-3); text-align:left}
+button.search{cursor:pointer}
+.field-msg{font-size:15px; line-height:20px; margin:6px 4px 0; display:flex; gap:6px; align-items:center}
+.field-msg.err{color:var(--error)}
+.suggest{background:#fff; border:1px solid var(--line); border-radius:var(--r-md); box-shadow:var(--e2); margin-top:6px; overflow:hidden}
+.suggest button{display:flex; align-items:center; gap:12px; width:100%; min-height:48px; padding:0 14px; border:0; background:none; text-align:left; cursor:pointer}
+.suggest button + button{border-top:1px solid var(--line)}
+.suggest button:active{background:var(--surface-2)}
+.suggest mark{background:none; font-weight:700; color:var(--ink)}
+
+.chips{display:flex; gap:8px; overflow-x:auto; scrollbar-width:none; padding:2px}
+.chips::-webkit-scrollbar{display:none}
+.chip{height:48px; padding:0 16px; border-radius:var(--r-pill); border:2px solid var(--line-strong); background:#fff; font-weight:700; font-size:16px; display:inline-flex; align-items:center; gap:8px; white-space:nowrap; cursor:pointer; flex:none}
+.chip .dot{width:12px; height:12px; border-radius:50%}
+.chip[aria-pressed=true]{background:var(--ink); color:#fff; border-color:var(--ink)}
+.chip[aria-pressed=true] .dot{box-shadow:0 0 0 2px #fff}
+.chip:active,.chip.is-pressed{transform:translateY(1px); background:var(--surface-2)}
+.chip[aria-pressed=true]:active{background:#000}
+.chip:disabled{border-style:dashed; color:var(--ink-3); background:var(--surface-2); cursor:not-allowed}
+
+.num{width:48px; height:48px; border-radius:10px; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:700; font-size:18px; flex:none}
+.stall-card{display:grid; grid-template-columns:48px 1fr auto; gap:12px; align-items:center; padding:12px; border-radius:var(--r-md); background:#fff; border:1px solid var(--line); min-height:72px; width:100%; text-align:left; cursor:pointer}
+.stall-card:active{background:var(--surface-2)}
+.stall-card .name{font-weight:700; font-size:17px; line-height:22px}
+.stall-card .sub{font-size:15px; line-height:20px; color:var(--ink-2)}
+.stall-card .dist{font-weight:700; font-size:16px; white-space:nowrap}
+.stall-card.is-absent{background:var(--surface-2)}
+.stall-card.is-absent .num{background:#fff !important; color:var(--ink-3); border:2px dashed var(--ink-3)}
+.stall-card.is-absent .dist{color:var(--ink-3); font-weight:400}
+
+.pays{display:flex; flex-wrap:wrap; gap:8px}
+.pay{display:inline-flex; align-items:center; gap:6px; height:34px; padding:0 12px 0 8px; border-radius:var(--r-pill); background:var(--surface-2); font-weight:700; font-size:15px; color:var(--ink)}
+.pay svg.i{width:20px; height:20px}
+.pay.is-off{background:transparent; border:1.5px dashed var(--line-strong); color:var(--ink-3); text-decoration:line-through}
+.tag{display:inline-flex; align-items:center; height:34px; padding:0 12px; border-radius:var(--r-pill); border:1.5px solid var(--line-strong); font-size:15px}
+
+.banner{display:flex; gap:12px; align-items:flex-start; padding:12px 14px; border-radius:var(--r-md); border-left:6px solid; font-size:16px; line-height:22px}
+.banner .b-title{font-weight:700; display:block}
+.banner .b-act{margin-top:6px}
+.banner.warn{background:var(--warning-tint); border-color:var(--warning); color:#3d2a00}
+.banner.warn svg.i{color:var(--warning)}
+.banner.err{background:var(--error-tint); border-color:var(--error); color:#4a0f0a}
+.banner.err svg.i{color:var(--error)}
+.banner.info{background:var(--info-tint); border-color:var(--info); color:#0e2a5c}
+.banner.info svg.i{color:var(--info)}
+.banner .btn{min-height:44px; padding:0 14px; font-size:16px}
+.toast{display:flex; gap:12px; align-items:center; background:var(--ink); color:#fff; border-radius:var(--r-md); padding:14px 16px; box-shadow:var(--e2); font-size:16px; line-height:22px}
+.toast svg.i{color:var(--sun)}
+
+.dir{display:grid; grid-template-columns:80px 1fr; gap:14px; align-items:center; background:var(--primary); color:#fff; border-radius:var(--r-lg); padding:14px 16px; box-shadow:var(--e2)}
+.dir .arrow{width:80px; height:80px; border-radius:50%; background:#fff; color:var(--primary); display:flex; align-items:center; justify-content:center}
+.dir .arrow svg{width:48px; height:48px; stroke-width:3; transition:transform .3s}
+.dir .meters{font-size:36px; line-height:40px; font-weight:700}
+.dir .instr{font-size:17px; line-height:23px}
+.dir.arrived{background:var(--sun); color:var(--ink)}
+.dir.arrived .arrow{color:var(--ink)}
+
+.sheet{position:absolute; left:0; right:0; bottom:0; background:#fff; border-radius:var(--r-lg) var(--r-lg) 0 0; box-shadow:var(--e3); display:flex; flex-direction:column; transition:height .25s ease; z-index:5}
+.sheet.dragging{transition:none}
+.sheet-handle{height:30px; display:flex; justify-content:center; align-items:center; cursor:grab; touch-action:none; flex:none}
+.sheet-handle .grip{width:48px; height:5px; border-radius:3px; background:#B5AB96}
+.sheet-body{padding:0 16px 16px; overflow-y:auto; flex:1}
+.sheet-demo{position:relative; width:260px; height:220px; background:var(--surface-2); border-radius:var(--r-md); overflow:hidden}
+
+.sheet-body .cta-sticky{position:sticky; bottom:0; box-shadow:0 0 0 10px #fff, 0 -14px 14px 6px #fff}
+.photo{height:110px; border-radius:var(--r-md); display:flex; align-items:flex-end; padding:10px; color:#fff; font-size:14px; font-weight:700; background-size:cover}
+
+/* ============ PROTÓTIPO ============ */
+.proto{display:grid; grid-template-columns:230px 410px 1fr; gap:24px; align-items:start}
+.proto-nav{position:sticky; top:16px}
+.proto-nav h3{font-size:14px; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-3); margin:16px 0 6px}
+.proto-nav h3:first-child{margin-top:0}
+.proto-nav button{display:block; width:100%; text-align:left; min-height:44px; padding:8px 12px; border:0; border-radius:var(--r-sm); background:none; cursor:pointer; font-size:16px; line-height:20px}
+.proto-nav button[aria-current=true]{background:var(--ink); color:#fff; font-weight:700}
+.proto-nav button:not([aria-current=true]):hover{background:var(--surface-2)}
+.phone{width:410px; max-width:100%; height:864px; border:10px solid #1C1A16; border-radius:48px; overflow:hidden; position:relative; background:var(--bg); box-shadow:0 20px 50px rgba(28,26,22,.25)}
+.screen{position:absolute; inset:0; display:none; flex-direction:column; background:var(--bg)}
+.screen.active{display:flex}
+.statusbar{height:34px; flex:none; display:flex; align-items:center; justify-content:space-between; padding:0 24px; font-size:15px; font-weight:700; background:inherit; position:relative; z-index:6}
+.notes{background:var(--surface); border:1px solid var(--line); border-radius:var(--r-lg); padding:20px; position:sticky; top:16px}
+.notes h3{margin:0 0 4px; font-size:22px; line-height:28px}
+.notes .flow{color:var(--ink-2); font-size:15px; margin:0 0 14px}
+.notes ul{margin:0; padding:0; list-style:none; display:flex; flex-direction:column; gap:12px}
+.notes li{padding:12px 14px; background:var(--sun-tint); border-radius:var(--r-sm); border-left:5px solid var(--sun); font-size:16px; line-height:23px}
+.notes li b{display:block}
+.demo-ctl{border:2px dashed var(--info) !important; color:var(--info) !important; background:var(--info-tint) !important}
+
+/* telas */
+.topbar{padding:6px 12px 10px; background:var(--bg); display:flex; flex-direction:column; gap:10px; flex:none; position:relative; z-index:4; box-shadow:0 2px 0 var(--line)}
+.row{display:flex; align-items:center; gap:8px}
+.mapwrap{flex:1; position:relative; overflow:hidden; background:#E9E1CF}
+.mapwrap svg.map{width:100%; height:auto; display:block}
+.locate-btn{position:absolute; right:12px; z-index:3}
+.overlay-top{position:absolute; left:12px; right:12px; top:12px; z-index:4}
+.pad{padding:16px}
+.stack{display:flex; flex-direction:column; gap:12px}
+.list-title{font-size:15px; font-weight:700; color:var(--ink-2); text-transform:uppercase; letter-spacing:.04em; margin:4px 0 0}
+.bottom-actions{margin-top:auto; padding:16px; display:flex; flex-direction:column; gap:8px; background:var(--bg)}
+.welcome-hero{background:var(--surface)}
+.welcome-body{padding:28px 20px 0; display:flex; flex-direction:column; gap:14px}
+.perm{display:flex; gap:12px; align-items:flex-start; background:var(--info-tint); border-radius:var(--r-md); padding:14px; color:#0e2a5c}
+.perm svg.i{color:var(--info); width:28px; height:28px}
+.stat-row{display:flex; gap:10px}
+.stat{flex:1; background:var(--surface); border:1px solid var(--line); border-radius:var(--r-md); padding:12px}
+.stat b{display:block; font-size:24px; line-height:28px}
+.stat span{font-size:15px; color:var(--ink-2)}
+
+.nfc-ring{width:200px; height:200px; border-radius:50%; margin:8px auto 0; display:flex; align-items:center; justify-content:center; position:relative; background:var(--primary-tint); color:var(--primary)}
+.nfc-ring svg.i{width:84px; height:84px; stroke-width:1.8}
+.nfc-ring::before,.nfc-ring::after{content:""; position:absolute; inset:0; border-radius:50%; border:3px solid var(--primary); opacity:0; animation:ping 2s ease-out infinite}
+.nfc-ring::after{animation-delay:1s}
+@keyframes ping{0%{transform:scale(.8); opacity:.7} 100%{transform:scale(1.25); opacity:0}}
+.nfc-ring.ok{background:var(--primary); color:#fff}
+.nfc-ring.ok::before,.nfc-ring.ok::after{display:none}
+.progress{height:14px; background:var(--surface-2); border-radius:var(--r-pill); overflow:hidden; border:1px solid var(--line)}
+.progress > div{height:100%; background:var(--primary); border-radius:var(--r-pill); transition:width .4s}
+
+.form-field{display:flex; flex-direction:column; gap:6px}
+.form-field label{font-weight:700}
+.input{height:52px; border:2px solid var(--line-strong); border-radius:var(--r-md); padding:0 14px; font-size:17px; background:#fff; width:100%}
+.input:focus{outline:none; border-color:var(--primary); box-shadow:0 0 0 4px var(--primary-tint)}
+.input.is-error{border-color:var(--error)}
+.tag-x{display:inline-flex; align-items:center; gap:2px; height:40px; padding:0 4px 0 14px; border-radius:var(--r-pill); background:var(--surface-2); font-size:16px; font-weight:700}
+.tag-x button{width:36px; height:36px; border:0; background:none; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center}
+.tag-x svg.i{width:18px; height:18px}
+.photo-slot{height:120px; border:2px dashed var(--line-strong); border-radius:var(--r-md); display:flex; align-items:center; justify-content:center; gap:10px; color:var(--ink-2); font-weight:700; background:var(--surface)}
+
+/* mapa svg */
+.map .stall{cursor:pointer}
+.map text{font-family:var(--font); font-weight:700; pointer-events:none}
+.pulse{animation:pulse 2s ease-out infinite; transform-box:fill-box; transform-origin:center}
+@keyframes pulse{0%{transform:scale(1); opacity:.5} 100%{transform:scale(3); opacity:0}}
+
+.map .emo{font-family:'Segoe UI Emoji','Apple Color Emoji','Noto Color Emoji',sans-serif; font-weight:400}
+.map.zoomable{width:100% !important; height:100% !important; touch-action:none; cursor:grab}
+.map.zoomable:active{cursor:grabbing}
+.zoom-ctl{position:absolute; right:12px; bottom:126px; display:flex; flex-direction:column; gap:8px; z-index:3}
+.zoom-toggle{position:absolute; left:12px; bottom:126px; z-index:3; min-height:44px; font-size:16px; box-shadow:var(--e2)}
+.num.emo-num{font-size:26px; font-weight:400; position:relative}
+.num.emo-num small{position:absolute; right:-6px; bottom:-6px; min-width:22px; height:20px; padding:0 4px; border-radius:6px; background:var(--ink); color:#fff; font-size:12px; font-weight:700; line-height:20px; text-align:center}
+.stall-card.is-absent .num.emo-num{filter:grayscale(1)}
+
+@media (max-width:1100px){
+  .proto{grid-template-columns:1fr 410px}
+  .proto-nav{grid-column:1 / -1; position:static; display:flex; flex-wrap:wrap; gap:6px}
+  .proto-nav h3{width:100%; margin:8px 0 0}
+  .proto-nav button{width:auto}
+}
+@media (max-width:760px){
+  .proto{grid-template-columns:1fr}
+  .phone{margin:0 auto; border-width:6px; border-radius:36px; height:820px}
+  .notes{position:static}
+  .type-row{grid-template-columns:1fr; gap:4px}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none !important; transition:none !important}}
+</style>
+</head>
+<body>
+
+<!-- ============ ÍCONES ============ -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M16.5 16.5L21 21"/></symbol>
+  <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></symbol>
+  <symbol id="i-stall" viewBox="0 0 24 24"><path d="M3 9l2-5h14l2 5"/><path d="M3 9a3 3 0 0 0 6 0 3 3 0 0 0 6 0 3 3 0 0 0 6 0"/><path d="M5 12v8h14v-8"/><path d="M10 20v-4h4v4"/></symbol>
+  <symbol id="i-route" viewBox="0 0 24 24"><circle cx="6" cy="19" r="2"/><circle cx="18" cy="5" r="2"/><path d="M8 19h7a3.5 3.5 0 0 0 0-7H9a3.5 3.5 0 0 1 0-7h7"/></symbol>
+  <symbol id="i-filter" viewBox="0 0 24 24"><path d="M4 6h16M7 12h10M10 18h4"/></symbol>
+  <symbol id="i-pix" viewBox="0 0 24 24"><path d="M12 2.5l9.5 9.5-9.5 9.5L2.5 12z"/><path d="M8.5 12l3.5-3.5 3.5 3.5-3.5 3.5z"/></symbol>
+  <symbol id="i-card" viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M3 10h18M7 15h3"/></symbol>
+  <symbol id="i-cash" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="10" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 12h.01M18 12h.01"/></symbol>
+  <symbol id="i-nfc" viewBox="0 0 24 24"><path d="M6 9a4 4 0 0 1 0 6"/><path d="M10 6.5a8 8 0 0 1 0 11"/><path d="M14 4a12 12 0 0 1 0 16"/><path d="M18 2a15 15 0 0 1 0 20"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M12 20V4M5 11l7-7 7 7"/></symbol>
+  <symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+  <symbol id="i-back" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 3l10 18H2z"/><path d="M12 10v4M12 17.5v.01"/></symbol>
+  <symbol id="i-gpsoff" viewBox="0 0 24 24"><circle cx="12" cy="12" r="6"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4M4 4l16 16"/></symbol>
+  <symbol id="i-locate" viewBox="0 0 24 24"><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2" fill="currentColor"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></symbol>
+  <symbol id="i-edit" viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></symbol>
+  <symbol id="i-camera" viewBox="0 0 24 24"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+  <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.01"/></symbol>
+</svg>
+
+<header class="page-head">
+  <div class="awning" aria-hidden="true"></div>
+  <div class="inner" style="padding-top:36px">
+    <h1 class="t-display">Feira no Mapa</h1>
+    <p>Design system e protótipo navegável do mapa da feira. Nome provisório, dados fictícios. Os números de contraste desta página são calculados ao vivo a partir dos tokens.</p>
+    <div class="tabs" role="tablist">
+      <button class="tab" role="tab" aria-selected="true" data-view="v-ds">Design system</button>
+      <button class="tab" role="tab" aria-selected="false" data-view="v-proto">Protótipo</button>
+    </div>
+  </div>
+</header>
+
+<main>
+<!-- ================================================= DESIGN SYSTEM -->
+<section class="view active" id="v-ds">
+
+  <div class="ds-section">
+    <h2 class="t-title">1. Cores</h2>
+    <p class="lead">Base creme, verde-feira como cor de ação e laranja-toldo como cor de identidade. As cores de categoria pintam as barracas no mapa e precisam aguentar texto branco por cima.</p>
+    <h3 class="t-sub">Marca e neutros</h3>
+    <div class="grid g-swatch" id="sw-base"></div>
+    <h3 class="t-sub" style="margin-top:24px">Feedback</h3>
+    <div class="grid g-swatch" id="sw-feedback"></div>
+    <h3 class="t-sub" style="margin-top:24px">Categorias de barraca</h3>
+    <div class="grid g-swatch" id="sw-cat"></div>
+    <h3 class="t-sub" style="margin-top:24px">Contraste texto/fundo</h3>
+    <p class="t-caption" style="margin:0 0 10px">AA exige 4,5:1 para texto comum. AAA exige 7:1. Calculado pela fórmula WCAG 2.x.</p>
+    <div class="table-wrap"><table class="contrast" id="contrast"></table></div>
+    <p class="why"><b>Por que tema só claro?</b> O uso principal é sob sol forte, onde fundo claro com texto escuro tem melhor leitura que modo escuro. A ação principal (verde #185C31) passa AAA com branco de propósito: no sol, AA no limite não basta.</p>
+  </div>
+
+  <div class="ds-section">
+    <h2 class="t-title">2. Tipografia</h2>
+    <p class="lead">Uma família só: <b>Atkinson Hyperlegible</b>, desenhada pelo Braille Institute para leitura com baixa visão. Letras ambíguas (I, l, 1, O, 0) têm formas distintas, o que importa para números de barraca e preços.</p>
+    <div id="type-scale"></div>
+    <p class="why"><b>Por que corpo em 17px e não 16px?</b> O público inclui idosos lendo em pé, no sol, com o braço esticado. O mínimo pedido era 16px. Subi um ponto porque o custo em espaço é pequeno e o ganho de leitura é real. Legenda (15px) só para informação secundária.</p>
+  </div>
+
+  <div class="ds-section">
+    <h2 class="t-title">3. Espaçamento</h2>
+    <p class="lead">Escala em múltiplos de 4. Área de toque mínima de 48px em tudo que é clicável.</p>
+    <div id="space-scale"></div>
+  </div>
+
+  <div class="ds-section">
+    <h2 class="t-title">4. Raios, sombras e elevação</h2>
+    <div class="shape-demo">
+      <div class="shape" style="border-radius:var(--r-sm)"><span><b>r-sm 8px</b><br>badges, campos internos</span></div>
+      <div class="shape" style="border-radius:var(--r-md)"><span><b>r-md 12px</b><br>botões, cards, campos</span></div>
+      <div class="shape" style="border-radius:var(--r-lg)"><span><b>r-lg 20px</b><br>bottom sheet, painéis</span></div>
+      <div class="shape" style="border-radius:var(--r-pill)"><span style="margin:auto"><b>pill</b> chips, busca</span></div>
+    </div>
+    <div class="shape-demo" style="margin-top:20px">
+      <div class="shape" style="border-radius:var(--r-md); border:0; box-shadow:var(--e1)"><span><b>e1</b><br>cards no fluxo</span></div>
+      <div class="shape" style="border-radius:var(--r-md); border:0; box-shadow:var(--e2)"><span><b>e2</b><br>flutuando sobre o mapa</span></div>
+      <div class="shape" style="border-radius:var(--r-md); border:0; box-shadow:var(--e3)"><span><b>e3</b><br>bottom sheet</span></div>
+    </div>
+    <p class="why"><b>Só três níveis de elevação.</b> O mapa é a camada zero; tudo que flutua sobre ele (busca, botões, sheet) precisa se destacar sem virar uma pilha de sombras.</p>
+  </div>
+
+  <div class="ds-section">
+    <h2 class="t-title">5. Ícones</h2>
+    <p class="lead">Traço de 2px, cantos arredondados, grade de 24px. Sempre com texto ao lado nas ações principais: ícone sozinho só em ações universais (fechar, voltar, centralizar).</p>
+    <div class="grid icon-grid" id="icons"></div>
+  </div>
+
+  <div class="ds-section">
+    <h2 class="t-title">6. Componentes</h2>
+
+    <div class="comp">
+      <h3>Botão</h3>
+      <p>Altura 52px. Primário para a única ação principal da tela, secundário para alternativas, fantasma para saídas.</p>
+      <div class="states" id="btn-states"></div>
+    </div>
+
+    <div class="comp">
+      <h3>Campo de busca com sugestões</h3>
+      <p>Em formato pill para se diferenciar dos campos de formulário. As sugestões destacam o trecho digitado.</p>
+      <div class="states">
+        <div class="state" style="width:300px"><span class="lbl">Default</span>
+          <div class="search"><svg class="i"><use href="#i-search"/></svg><span class="placeholder">Buscar barraca ou produto</span></div></div>
+        <div class="state" style="width:300px"><span class="lbl">Foco + sugestões</span>
+          <div class="search is-focus"><svg class="i"><use href="#i-search"/></svg><input value="past" aria-label="busca"><button class="icon-btn" aria-label="Limpar"><svg class="i"><use href="#i-close"/></svg></button></div>
+          <div class="suggest"><button><svg class="i"><use href="#i-search"/></svg><span><mark>Past</mark>el</span></button><button><svg class="i"><use href="#i-stall"/></svg><span><mark>Past</mark>elaria Yoshida</span></button></div></div>
+        <div class="state" style="width:300px"><span class="lbl">Carregando</span>
+          <div class="search is-focus"><svg class="i"><use href="#i-search"/></svg><input value="queijo" aria-label="busca"><span class="spinner" style="color:var(--primary); margin-right:12px"></span></div></div>
+        <div class="state" style="width:300px"><span class="lbl">Erro / sem resultado</span>
+          <div class="search is-error"><svg class="i"><use href="#i-search"/></svg><input value="sushi" aria-label="busca"><button class="icon-btn" aria-label="Limpar"><svg class="i"><use href="#i-close"/></svg></button></div>
+          <p class="field-msg err"><svg class="i" style="width:18px;height:18px"><use href="#i-alert"/></svg>Nenhuma barraca vende "sushi" hoje.</p></div>
+        <div class="state" style="width:300px"><span class="lbl">Desabilitado</span>
+          <div class="search" style="background:var(--surface-2); border-style:dashed; color:var(--ink-3)"><svg class="i"><use href="#i-search"/></svg><span class="placeholder">Mapa ainda carregando</span></div></div>
+      </div>
+    </div>
+
+    <div class="comp">
+      <h3>Chip de filtro / categoria</h3>
+      <p>Selecionado inverte para fundo escuro: no sol, mudança de cor sutil some, inversão não.</p>
+      <div class="states">
+        <div class="state"><span class="lbl">Default</span><button class="chip"><span class="dot" style="background:var(--cat-horti)"></span>Hortifruti</button></div>
+        <div class="state"><span class="lbl">Selecionado</span><button class="chip" aria-pressed="true"><span class="dot" style="background:var(--cat-horti)"></span>Hortifruti</button></div>
+        <div class="state"><span class="lbl">Pressionado</span><button class="chip is-pressed"><span class="dot" style="background:var(--cat-comida)"></span>Comida</button></div>
+        <div class="state"><span class="lbl">Desabilitado</span><button class="chip" disabled>Artesanato (0)</button></div>
+        <div class="state"><span class="lbl">Com ícone</span><button class="chip"><svg class="i" style="width:20px;height:20px"><use href="#i-pix"/></svg>Aceita Pix</button></div>
+      </div>
+    </div>
+
+    <div class="comp">
+      <h3>Pin de barraca no mapa e marcador "você está aqui"</h3>
+      <p>Cada barraca é desenhada como uma barraca vista de cima: toldo listrado na cor da categoria e o ícone do produto principal. De longe mostra ícone e número (o mesmo da placa física); de perto, ícone e nome. Ao ser selecionada, ganha um pin por cima.</p>
+      <div class="states" id="pin-states"></div>
+    </div>
+
+    <div class="comp">
+      <h3>Card de barraca</h3>
+      <p>Compacto em listas, expandido dentro do bottom sheet.</p>
+      <div class="states">
+        <div class="state" style="width:340px"><span class="lbl">Compacto</span><div id="card-compact"></div></div>
+        <div class="state" style="width:340px"><span class="lbl">Não veio hoje</span><div id="card-absent"></div></div>
+        <div class="state" style="width:340px"><span class="lbl">Expandido</span><div id="card-expanded" style="background:#fff; border:1px solid var(--line); border-radius:var(--r-lg); padding:16px"></div></div>
+      </div>
+    </div>
+
+    <div class="comp">
+      <h3>Bottom sheet arrastável</h3>
+      <p>Três alturas: espiada, metade e cheia. A alça tem 48px de largura e 30px de altura de toque. Arraste a alça no exemplo.</p>
+      <div class="states">
+        <div class="state"><span class="lbl">Interativo</span>
+          <div class="sheet-demo" id="sheet-demo"><div class="sheet" data-snaps="56,120,200" style="height:120px"><div class="sheet-handle"><div class="grip"></div></div><div class="sheet-body"><b>49 barracas hoje</b><div class="t-caption">Arraste para cima</div></div></div></div></div>
+      </div>
+    </div>
+
+    <div class="comp">
+      <h3>Indicador de direção e distância</h3>
+      <p>A distância é a informação mais importante, então é o maior texto da tela inteira.</p>
+      <div class="states">
+        <div class="state" style="width:340px"><span class="lbl">Navegando</span>
+          <div class="dir"><div class="arrow"><svg class="i"><use href="#i-arrow"/></svg></div><div><div class="meters">35 m</div><div class="instr">Siga pelo Corredor 1. A barraca fica à direita.</div></div></div></div>
+        <div class="state" style="width:340px"><span class="lbl">Chegou</span>
+          <div class="dir arrived"><div class="arrow"><svg class="i"><use href="#i-check"/></svg></div><div><div class="meters">Chegou!</div><div class="instr">Pastel do Zé está à sua direita.</div></div></div></div>
+      </div>
+    </div>
+
+    <div class="comp">
+      <h3>Toast e banner de aviso</h3>
+      <p>Banner fica até o problema ser resolvido. Toast some sozinho em 5 segundos e nunca leva uma ação crítica.</p>
+      <div class="states">
+        <div class="state" style="width:340px"><span class="lbl">Banner alerta</span>
+          <div class="banner warn"><svg class="i"><use href="#i-gpsoff"/></svg><div><span class="b-title">Localização desligada</span>O mapa funciona, mas sem mostrar onde você está.<div class="b-act"><button class="btn btn-secondary">Ativar localização</button></div></div></div></div>
+        <div class="state" style="width:340px"><span class="lbl">Banner erro</span>
+          <div class="banner err"><svg class="i"><use href="#i-alert"/></svg><div><span class="b-title">Sem internet</span>Mostrando o mapa salvo às 7h12.</div></div></div>
+        <div class="state" style="width:340px"><span class="lbl">Banner info</span>
+          <div class="banner info"><svg class="i"><use href="#i-info"/></svg><div><span class="b-title">Feira fecha às 13h</span>Algumas barracas desmontam a partir das 12h30.</div></div></div>
+        <div class="state" style="width:340px"><span class="lbl">Toast</span>
+          <div class="toast"><svg class="i"><use href="#i-alert"/></svg>Sinal de GPS fraco. Sua posição pode estar até 20 m errada.</div></div>
+      </div>
+    </div>
+
+    <div class="comp">
+      <h3>Badge de forma de pagamento</h3>
+      <p>Ícone mais texto, sempre. Ninguém deve precisar decorar o que cada ícone significa.</p>
+      <div class="states">
+        <div class="state"><span class="lbl">Aceita</span><div class="pays"><span class="pay"><svg class="i"><use href="#i-pix"/></svg>Pix</span><span class="pay"><svg class="i"><use href="#i-card"/></svg>Cartão</span><span class="pay"><svg class="i"><use href="#i-cash"/></svg>Dinheiro</span></div></div>
+        <div class="state"><span class="lbl">Não aceita</span><div class="pays"><span class="pay is-off"><svg class="i"><use href="#i-card"/></svg>Cartão</span></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================= PROTÓTIPO -->
+<section class="view" id="v-proto">
+  <div class="proto">
+    <nav class="proto-nav" id="proto-nav" aria-label="Telas"></nav>
+
+    <div class="phone" id="phone">
+
+      <!-- 1 ENTRADA -->
+      <div class="screen" id="s-entrada">
+        <div class="welcome-hero">
+          <div class="statusbar" style="background:var(--surface)"><span>9:41</span><span>5G ▮▮▮</span></div>
+          <div class="awning"></div>
+        </div>
+        <div class="welcome-body">
+          <div class="t-caption" style="display:flex; gap:6px; align-items:center"><svg class="i" style="width:18px;height:18px"><use href="#i-clock"/></svg>Domingo, das 7h às 13h</div>
+          <h1 class="t-display" style="margin:0">Feira da Praça Central</h1>
+          <p class="t-body" style="margin:0">Ache o que procura e vá direto até a barraca.</p>
+          <div class="stat-row">
+            <div class="stat"><b>49</b><span>barracas hoje</span></div>
+            <div class="stat"><b>2</b><span>corredores</span></div>
+          </div>
+          <div class="perm"><svg class="i"><use href="#i-pin"/></svg><div><b>Por que pedimos sua localização?</b><br>Para mostrar onde você está no mapa da feira. Não guardamos sua posição.</div></div>
+        </div>
+        <div class="bottom-actions">
+          <button class="btn btn-primary btn-block" data-go="s-mapa"><svg class="i"><use href="#i-locate"/></svg>Permitir localização</button>
+          <button class="btn btn-ghost btn-block" data-go="s-gps">Ver o mapa sem localização</button>
+        </div>
+      </div>
+
+      <!-- 2 MAPA -->
+      <div class="screen" id="s-mapa">
+        <div class="statusbar"><span>9:41</span><span>5G ▮▮▮</span></div>
+        <div class="topbar">
+          <button class="search" data-go="s-busca"><svg class="i"><use href="#i-search"/></svg><span class="placeholder">Buscar barraca ou produto</span></button>
+          <div class="chips" data-chips="mapa"></div>
+        </div>
+        <div class="mapwrap"><svg class="map zoomable" data-map="mapa"></svg>
+          <button class="btn btn-secondary zoom-toggle" id="zoom-toggle">Ver feira inteira</button>
+          <div class="zoom-ctl">
+            <button class="icon-btn raised" id="z-in" aria-label="Aproximar"><svg class="i"><use href="#i-plus"/></svg></button>
+            <button class="icon-btn raised" id="z-out" aria-label="Afastar"><svg class="i"><use href="#i-minus"/></svg></button>
+            <button class="icon-btn raised" id="z-me" aria-label="Centralizar em mim"><svg class="i"><use href="#i-locate"/></svg></button>
+          </div>
+        </div>
+        <div class="sheet" data-snaps="110,360,640" style="height:110px">
+          <div class="sheet-handle"><div class="grip"></div></div>
+          <div class="sheet-body stack" id="mapa-sheet"></div>
+        </div>
+      </div>
+
+      <!-- 3 BUSCA -->
+      <div class="screen" id="s-busca">
+        <div class="statusbar"><span>9:41</span><span>5G ▮▮▮</span></div>
+        <div class="topbar">
+          <div class="row">
+            <button class="icon-btn" data-go="s-mapa" aria-label="Voltar"><svg class="i"><use href="#i-back"/></svg></button>
+            <div class="search"><svg class="i"><use href="#i-search"/></svg><input id="q" value="pastel" aria-label="Buscar barraca ou produto" autocomplete="off"><button class="icon-btn" id="q-clear" aria-label="Limpar busca"><svg class="i"><use href="#i-close"/></svg></button></div>
+          </div>
+        </div>
+        <div class="mapwrap" style="flex:none; height:270px"><svg class="map" data-map="busca" viewBox="0 0 450 700" preserveAspectRatio="xMidYMid meet" style="height:270px"></svg></div>
+        <div class="pad stack" style="overflow-y:auto; flex:1" id="busca-results"></div>
+      </div>
+
+      <!-- 4 DETALHE -->
+      <div class="screen" id="s-detalhe">
+        <div class="statusbar"><span>9:41</span><span>5G ▮▮▮</span></div>
+        <div class="mapwrap"><svg class="map" data-map="detalhe" viewBox="0 0 450 700"></svg>
+          <div class="overlay-top row"><button class="icon-btn raised" data-go="s-busca" aria-label="Voltar"><svg class="i"><use href="#i-back"/></svg></button></div>
+        </div>
+        <div class="sheet" data-snaps="160,470,780" style="height:470px">
+          <div class="sheet-handle"><div class="grip"></div></div>
+          <div class="sheet-body" id="detalhe-body"></div>
+        </div>
+      </div>
+
+      <!-- 5 NAVEGAÇÃO -->
+      <div class="screen" id="s-nav">
+        <div class="statusbar"><span>9:41</span><span>5G ▮▮▮</span></div>
+        <div class="mapwrap"><svg class="map" data-map="nav" viewBox="0 0 450 700"></svg>
+          <div class="overlay-top" id="nav-dir"></div>
+        </div>
+        <div class="bottom-actions" style="box-shadow:var(--e3); border-radius:var(--r-lg) var(--r-lg) 0 0; background:#fff; z-index:5">
+          <div id="nav-dest"></div>
+          <div class="row">
+            <button class="btn btn-secondary" style="flex:1" data-go="s-mapa">Encerrar</button>
+            <button class="btn demo-ctl" style="flex:1.4" id="nav-sim">▶ Simular caminhada</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 6a GPS NEGADO -->
+      <div class="screen" id="s-gps">
+        <div class="statusbar"><span>9:41</span><span>5G ▮▮▮</span></div>
+        <div class="topbar">
+          <button class="search" data-go="s-busca"><svg class="i"><use href="#i-search"/></svg><span class="placeholder">Buscar barraca ou produto</span></button>
+          <div class="banner warn"><svg class="i"><use href="#i-gpsoff"/></svg><div><span class="b-title">Localização desligada</span>O mapa funciona, mas sem mostrar onde você está.<div class="b-act"><button class="btn btn-secondary" data-go="s-mapa">Ativar localização</button></div></div></div>
+        </div>
+        <div class="mapwrap"><svg class="map" data-map="gps" viewBox="0 0 450 700"></svg></div>
+      </div>
+
+      <!-- 6b SINAL FRACO -->
+      <div class="screen" id="s-fraco">
+        <div class="statusbar"><span>9:41</span><span>5G ▮▮▮</span></div>
+        <div class="topbar">
+          <button class="search" data-go="s-busca"><svg class="i"><use href="#i-search"/></svg><span class="placeholder">Buscar barraca ou produto</span></button>
+        </div>
+        <div class="mapwrap"><svg class="map" data-map="fraco" viewBox="0 0 450 700"></svg>
+          <div class="overlay-top"><div class="toast"><svg class="i"><use href="#i-alert"/></svg><span>Sinal de GPS fraco. Sua posição pode estar até 20 m errada. Use os números das barracas como referência.</span></div></div>
+        </div>
+      </div>
+
+      <!-- 6c BARRACA AUSENTE -->
+      <div class="screen" id="s-ausente">
+        <div class="statusbar"><span>9:41</span><span>5G ▮▮▮</span></div>
+        <div class="mapwrap"><svg class="map" data-map="ausente" viewBox="0 0 450 700"></svg>
+          <div class="overlay-top row"><button class="icon-btn raised" data-go="s-mapa" aria-label="Voltar"><svg class="i"><use href="#i-back"/></svg></button></div>
+        </div>
+        <div class="sheet" data-snaps="160,470,780" style="height:470px">
+          <div class="sheet-handle"><div class="grip"></div></div>
+          <div class="sheet-body" id="ausente-body"></div>
+        </div>
+      </div>
+
+      <!-- 7 ORGANIZADOR -->
+      <div class="screen" id="s-org">
+        <div class="statusbar" style="background:var(--surface)"><span>6:12</span><span>5G ▮▮▮</span></div>
+        <div class="topbar" style="background:var(--surface)">
+          <div class="row" style="justify-content:space-between"><b class="t-sub">Montagem do mapa</b><span class="t-caption">Dom, 6:12</span></div>
+          <div><div class="row" style="justify-content:space-between; margin-bottom:6px"><b id="org-count">31 de 50 barracas</b><span class="t-caption" id="org-left">faltam 19</span></div><div class="progress"><div id="org-bar" style="width:62%"></div></div></div>
+        </div>
+        <div class="pad stack" style="flex:1; overflow-y:auto; text-align:center" id="org-body"></div>
+      </div>
+
+      <!-- 8 FEIRANTE -->
+      <div class="screen" id="s-feirante">
+        <div class="statusbar"><span>9:41</span><span>5G ▮▮▮</span></div>
+        <div class="topbar"><div class="row"><button class="icon-btn" aria-label="Voltar"><svg class="i"><use href="#i-back"/></svg></button><b class="t-sub">Minha barraca</b></div></div>
+        <div class="pad stack" style="flex:1; overflow-y:auto; gap:18px">
+          <div class="photo-slot"><svg class="i"><use href="#i-camera"/></svg>Trocar foto da barraca</div>
+          <div class="form-field"><label for="f-nome">Nome da barraca</label><input class="input" id="f-nome" value="Pastel do Zé"></div>
+          <div class="form-field"><label>Categoria</label><div class="chips" style="flex-wrap:wrap" id="f-cat"></div></div>
+          <div class="form-field"><label for="f-prod">O que você vende</label>
+            <div class="pays" id="f-tags"></div>
+            <div class="row"><input class="input" id="f-prod" placeholder="Ex: pastel de queijo"><button class="btn btn-secondary" id="f-add" aria-label="Adicionar produto"><svg class="i"><use href="#i-plus"/></svg></button></div>
+            <p class="field-msg err" id="f-err" hidden><svg class="i" style="width:18px;height:18px"><use href="#i-alert"/></svg>Informe pelo menos um produto. É por ele que os clientes buscam.</p>
+          </div>
+          <div class="form-field"><label>Formas de pagamento</label><div class="chips" style="flex-wrap:wrap" id="f-pay"></div></div>
+        </div>
+        <div class="bottom-actions" style="box-shadow:0 -2px 0 var(--line)"><button class="btn btn-primary btn-block" id="f-save">Salvar alterações</button></div>
+      </div>
+
+    </div>
+
+    <aside class="notes" id="notes" aria-live="polite"></aside>
+  </div>
+</section>
+</main>
+
+<script>
+/* ===================== DADOS ===================== */
+const CATS = {
+  horti:  {nome:'Hortifruti',      v:'--cat-horti'},
+  comida: {nome:'Comida',          v:'--cat-comida'},
+  carnes: {nome:'Carnes e peixes', v:'--cat-carnes'},
+  arte:   {nome:'Artesanato',      v:'--cat-arte'},
+  outros: {nome:'Outros',          v:'--cat-outros'},
+};
+const PAY = {pix:['Pix','i-pix'], cartao:['Cartão','i-card'], dinheiro:['Dinheiro','i-cash']};
+const RAW = [
+ ['Hortifruti Dona Cida','horti','verduras,legumes,frutas','pix cartao dinheiro'],
+ ['Café da Feira','comida','café,pão na chapa,bolo','pix cartao dinheiro'],
+ ['Ovos da Granja Feliz','outros','ovos caipira,ovos brancos','pix dinheiro'],
+ ['Peixaria do Mané','carnes','peixe fresco,sardinha,tilápia','pix cartao'],
+ ['Tomates do Valdir','horti','tomate,pimentão,cebola','pix dinheiro'],
+ ['Cestaria da Dona Zefa','arte','cestos,balaios,fruteiras','pix dinheiro'],
+ ['Verduras do Seu Antônio','horti','alface,couve,rúcula','dinheiro'],
+ ['Queijos da Serra','outros','queijo minas,requeijão,manteiga','pix cartao dinheiro'],
+ ['Caldo de Cana do Baiano','comida','caldo de cana,coco gelado','pix dinheiro'],
+ ['Frango Caipira do Jorge','carnes','frango caipira,miúdos','pix cartao'],
+ ['Frutas da Dona Lurdes','horti','banana,mamão,laranja,maçã','pix dinheiro'],
+ ['Bordados da Lia','arte','panos bordados,toalhas','pix'],
+ ['Mel do Apiário São José','outros','mel,própolis,cera','pix cartao dinheiro'],
+ ['Orgânicos Sítio Boa Vista','horti','orgânicos,verduras,legumes','pix cartao'],
+ ['Tapioca da Ana','comida','tapioca,cuscuz','pix cartao dinheiro'],
+ ['Açougue Boi Bom','carnes','carne bovina,linguiça','pix cartao'],
+ ['Pastel do Zé','comida','pastel de carne,pastel de queijo,caldo de cana','pix cartao dinheiro'],
+ ['Flores da Dona Hilda','outros','flores,buquês','pix dinheiro'],
+ ['Banca do Japonês','horti','legumes,verduras,cogumelos','pix cartao dinheiro'],
+ ['Cerâmica Barro Vivo','arte','vasos,pratos,canecas','pix cartao'],
+ ['Pastelaria Yoshida','comida','pastel,yakisoba','pix cartao dinheiro'],
+ ['Raízes do Tião','horti','mandioca,batata,inhame','dinheiro'],
+ ['Peixes do Litoral','carnes','camarão,peixe fresco,lula','pix cartao'],
+ ['Temperos da Bahia','outros','temperos,pimentas,castanhas','pix dinheiro'],
+ ['Cítricos do Paulinho','horti','laranja,limão,tangerina','pix dinheiro'],
+ ['Acarajé da Tia Bel','comida','acarajé,abará','pix dinheiro'],
+ ['Sabonetes Artesanais Flor','arte','sabonetes,sais de banho','pix cartao'],
+ ['Bananas da Serra','horti','banana prata,banana nanica','dinheiro'],
+ ['Linguiças do Sul','carnes','linguiça,bacon,costela','pix cartao'],
+ ['Plantas e Mudas do Chico','outros','mudas,suculentas,terra adubada','pix dinheiro'],
+ ['Pamonha de Piracicaba','comida','pamonha,curau,milho verde','pix dinheiro'],
+ ['Morangos de Atibaia','horti','morango,amora','pix cartao'],
+ ['Brinquedos do Seu Jair','arte','brinquedos de madeira,pião','pix dinheiro'],
+ ['Grãos a Granel','outros','feijão,arroz,castanhas','pix cartao dinheiro'],
+ ['Folhas Frescas da Neide','horti','alface,agrião,cheiro-verde','pix dinheiro'],
+ ['Pastel da Kika','comida','pastel,pastel doce','pix cartao dinheiro'],
+ ['Camarões da Praia','carnes','camarão,siri','pix cartao'],
+ ['Doces Mineiros','outros','doce de leite,goiabada','pix dinheiro'],
+ ['Ervas da Vó Maria','horti','ervas,chás,orgânicos','pix dinheiro'],
+ ['Bijuterias da Mel','arte','brincos,colares','pix cartao'],
+ ['Espetinho do Gordo','comida','espetinho,pão de alho','pix cartao dinheiro'],
+ ['Frios Itália','carnes','presunto,salame,mortadela','pix cartao'],
+ ['Coco Gelado do Cícero','horti','coco verde,abacaxi','pix dinheiro'],
+ ['Panos de Prato da Cleide','arte','panos de prato,aventais','pix dinheiro'],
+ ['Bolos da Dona Rosa','comida','bolo,broa,rosca','pix dinheiro'],
+ ['Utilidades do Lar','outros','panelas,peneiras,utensílios','pix cartao dinheiro'],
+ ['Hortifruti Irmãos Silva','horti','frutas,legumes,verduras','pix cartao dinheiro'],
+ ['Velas e Aromas','arte','velas,incensos','pix cartao'],
+ ['Carnes do Seu Bento','carnes','carne bovina,carne suína','pix cartao dinheiro'],
+ ['Amendoim do Seu Lino','outros','amendoim torrado,pé de moleque','dinheiro'],
+];
+/* ícone do produto principal de cada barraca, na mesma ordem de RAW */
+const ICONS = ['🥕','☕','🥚','🐟','🍅','🧺','🥬','🧀','🥤','🍗','🍎','🧵','🍯','🌿','🌮','🥩','🥟','💐','🍄','🏺',
+               '🍜','🥔','🦑','🌶️','🍊','🧆','🧼','🍌','🌭','🌱','🌽','🍓','🧸','🌾','🥗','🥟','🦐','🍮','🍵','💍',
+               '🍢','🥪','🥥','🧶','🍰','🍳','🍇','🕯️','🍖','🥜'];
+const ABSENT = new Set([28]);
+
+/* geometria do mapa em unidades do SVG: mundo de 450 x 700, 1 unidade = 0,13 m. Quatro fileiras de barracas, dois corredores. */
+const W = 450, H = 700, M_PER_PX = 0.13;
+const AISLE = {1:115, 2:335};
+const COLS = [ {x:10, n:13, corredor:1, side:'esquerda'}, {x:140, n:12, corredor:1, side:'direita'},
+               {x:230, n:13, corredor:2, side:'esquerda'}, {x:360, n:12, corredor:2, side:'direita'} ];
+const ENTRY = {x:115, y:674};
+const POIS = [ {x:12, icon:'🚻', nome:'Banheiros', w:96}, {x:170, icon:'ℹ️', nome:'Informações', w:110}, {x:346, icon:'🏧', nome:'Caixa 24h', w:94} ];
+const STALLS = [];
+(function(){
+  let id = 1;
+  COLS.forEach((c, ci) => { for (let r = 0; r < c.n; r++, id++) {
+    const [nome, cat, prods, pays] = RAW[id-1];
+    STALLS.push({ id, nome, cat, icon:ICONS[id-1], prods:prods.split(','), pays:pays.split(' '), col:ci,
+      corredor:c.corredor, side:c.side,
+      x:c.x, y:600 - r*44, w:80, h:40, cx:c.x+40, cy:620 - r*44, absent:ABSENT.has(id) });
+  }});
+})();
+const byId = id => STALLS.find(s => s.id === id);
+const cssv = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const norm = s => s.normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
+const icon = (n, st='') => `<svg class="i" ${st?`style="${st}"`:''}><use href="#${n}"/></svg>`;
+
+function routeTo(s){
+  const ax = AISLE[s.corredor], pts = [ {...ENTRY} ];
+  if (ax !== ENTRY.x) pts.push({x:ax, y:ENTRY.y});
+  pts.push({x:ax, y:s.cy});
+  return pts;
+}
+const segLen = (a,b) => Math.hypot(b.x-a.x, b.y-a.y);
+const routeLen = pts => pts.slice(1).reduce((t,p,i) => t + segLen(pts[i], p), 0);
+function pointAt(pts, d){
+  for (let i = 1; i < pts.length; i++){
+    const L = segLen(pts[i-1], pts[i]);
+    if (d <= L) { const k = L ? d/L : 0; return {x:pts[i-1].x + (pts[i].x-pts[i-1].x)*k, y:pts[i-1].y + (pts[i].y-pts[i-1].y)*k, seg:i}; }
+    d -= L;
+  }
+  const last = pts[pts.length-1]; return {...last, seg:pts.length-1};
+}
+const distM = s => Math.round(routeLen(routeTo(s)) * M_PER_PX);
+
+/* ===================== MAPA SVG ===================== */
+function wrapName(txt, max = 12, lines = 3){
+  const out = []; let cur = '';
+  txt.split(' ').forEach(w => { if (!cur) cur = w; else if ((cur + ' ' + w).length <= max) cur += ' ' + w; else { out.push(cur); cur = w; } });
+  if (cur) out.push(cur);
+  if (out.length > lines){ out.length = lines; out[lines-1] += '…'; }
+  return out;
+}
+/* barraca vista de cima: toldo listrado na cor da categoria, ícone do produto e, de perto, o nome */
+function stallSVG(s, st = 'normal', detail = false){
+  const c = cssv(CATS[s.cat].v), t = cssv(CATS[s.cat].v + '-t');
+  const absent = st === 'absent', {x, y, w, h} = s;
+  const awn = absent ? '#B5AB96' : c, ink = absent ? '#6B6352' : '#1C1A16';
+  let body = absent ? '#F5EFE2' : '#FFFFFF', stroke = absent ? '#7A715F' : c, sw = 1.5;
+  if (st === 'result'){ stroke = cssv('--sun'); sw = 4; }
+  if (st === 'selected'){ body = t; sw = 3; }
+  let awning = '';
+  for (let i = 0; i < 8; i += 2) awning += `<rect x="${x + i*10}" y="${y}" width="10" height="8" style="fill:${awn}"/><circle cx="${x + i*10 + 5}" cy="${y + 8}" r="5" style="fill:${awn}"/>`;
+  const gray = absent ? 'filter:grayscale(1); opacity:.55' : '';
+  let content;
+  if (detail){
+    const lines = wrapName(s.nome), ty = y + 24 - (lines.length - 1) * 4.6 + 3;
+    content = `<text x="${x + 13}" y="${y + 31}" font-size="16" text-anchor="middle" class="emo" style="${gray}">${s.icon}</text>
+      <text x="${x + 25}" y="${ty}" font-size="8.4" style="fill:${ink}">${lines.map((l, i) => `<tspan x="${x + 25}" dy="${i ? 9.2 : 0}">${l}</tspan>`).join('')}</text>
+      <rect x="${x + w - 18}" y="${y + 1}" width="17" height="11" rx="3" fill="#1C1A16"/><text x="${x + w - 9.5}" y="${y + 9.6}" font-size="7.5" text-anchor="middle" fill="#fff">${s.id}</text>`;
+  } else {
+    content = `<text x="${x + 24}" y="${y + 34}" font-size="19" text-anchor="middle" class="emo" style="${gray}">${s.icon}</text>
+      <text x="${x + 58}" y="${y + 32}" font-size="15" text-anchor="middle" style="fill:${ink}">${s.id}</text>`;
+  }
+  return `<g class="stall" data-id="${s.id}" opacity="${st === 'dim' ? .22 : 1}" role="button" aria-label="${s.nome}">
+    <rect x="${x}" y="${y}" width="${w}" height="${h}" rx="4" style="fill:${body}"/>${awning}${content}
+    ${absent ? `<line x1="${x + 6}" y1="${y + h - 4}" x2="${x + w - 6}" y2="${y + 12}" stroke="#7A715F" stroke-width="1.5"/>` : ''}
+    <rect x="${x}" y="${y}" width="${w}" height="${h}" rx="4" fill="none" stroke="${stroke}" stroke-width="${sw}" ${absent ? 'stroke-dasharray="4 3"' : ''}/></g>`;
+}
+function pinSVG(s){
+  const c = s.absent ? '#7A715F' : cssv(CATS[s.cat].v), px = s.cx, py = s.y - 2;
+  return `<g pointer-events="none"><path d="M${px} ${py} l-10 -14 a14 14 0 1 1 20 0 z" style="fill:${c}" stroke="#fff" stroke-width="2.5"/>
+    <circle cx="${px}" cy="${py - 24}" r="5" fill="#fff"/></g>`;
+}
+function renderMap(svg, o = {}){
+  const hl = o.highlight || new Set();
+  let h = `<rect x="-200" y="-200" width="${W + 400}" height="${H + 400}" fill="#E9E1CF"/>
+    <rect x="-200" y="22" width="${W + 400}" height="44" fill="#FBF7EE"/>
+    <rect x="-200" y="648" width="${W + 400}" height="252" fill="#FBF7EE"/>
+    <rect x="90" y="22" width="50" height="678" fill="#FBF7EE"/>
+    <rect x="310" y="22" width="50" height="678" fill="#FBF7EE"/>
+    <text x="115" y="360" font-size="13" fill="#6B6352" text-anchor="middle" transform="rotate(-90 115 360)">Corredor 1</text>
+    <text x="335" y="360" font-size="13" fill="#6B6352" text-anchor="middle" transform="rotate(-90 335 360)">Corredor 2</text>
+    <rect x="6" y="661" width="78" height="26" rx="13" fill="#1C1A16"/>
+    <text x="45" y="679" text-anchor="middle" font-size="13" fill="#fff">ENTRADA</text>`;
+  POIS.forEach(p => { h += `<g><rect x="${p.x}" y="28" width="${p.w}" height="32" rx="16" fill="#fff" stroke="#7A715F" stroke-width="1.5"/>
+    <text x="${p.x + 17}" y="50" font-size="16" text-anchor="middle" class="emo">${p.icon}</text>
+    <text x="${p.x + 31}" y="48.5" font-size="12" fill="#1C1A16">${p.nome}</text></g>`; });
+  if (o.route){
+    const pts = o.route.map(p => p.x + ',' + p.y).join(' ');
+    h += `<polyline points="${pts}" fill="none" stroke="#1D5FD1" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" opacity=".9"/>
+          <polyline points="${pts}" fill="none" stroke="#fff" stroke-width="2" stroke-dasharray="2 8" stroke-linecap="round"/>`;
+  }
+  STALLS.forEach(s => {
+    let st = 'normal';
+    if (s.absent) st = 'absent';
+    else if (o.selected === s.id) st = 'selected';
+    else if (hl.has(s.id)) st = 'result';
+    else if (o.filter && !o.filter(s)) st = 'dim';
+    h += stallSVG(s, st, !!o.detail);
+  });
+  if (o.selected) h += pinSVG(byId(o.selected));
+  if (o.user){
+    const u = o.user;
+    if (o.accuracy) h += `<circle cx="${u.x}" cy="${u.y}" r="${o.accuracy}" fill="#1D5FD1" fill-opacity=".14" stroke="#1D5FD1" stroke-opacity=".5" stroke-dasharray="4 4"/>`;
+    else h += `<circle cx="${u.x}" cy="${u.y}" r="9" fill="#1D5FD1" class="pulse"/>`;
+    h += `<circle cx="${u.x}" cy="${u.y}" r="11" fill="#fff" stroke="rgba(0,0,0,.2)"/><circle cx="${u.x}" cy="${u.y}" r="8" fill="#1D5FD1"/>`;
+  }
+  svg.innerHTML = h;
+}
+
+/* ===================== COMPONENTES EM JS ===================== */
+/* mesmo ícone e número do mapa, para o cliente ligar a lista à barraca desenhada */
+const numBadge = s => `<span class="num emo-num" style="background:var(${CATS[s.cat].v}-t); border:2px solid var(${CATS[s.cat].v})">${s.icon}<small>${s.id}</small></span>`;
+function stallCard(s, opts = {}){
+  const right = s.absent ? 'Não veio' : `${distM(s)} m`;
+  return `<button class="stall-card${s.absent?' is-absent':''}" data-open="${s.id}">
+    ${numBadge(s)}
+    <span><span class="name">${opts.mark ? markText(s.nome, opts.mark) : s.nome}</span><br><span class="sub">${CATS[s.cat].nome} · Corredor ${s.corredor}</span></span>
+    <span class="dist">${right}</span></button>`;
+}
+function markText(txt, q){
+  const i = norm(txt).indexOf(norm(q));
+  return i < 0 ? txt : txt.slice(0,i) + '<mark style="background:var(--sun-tint); color:inherit; font-weight:700">' + txt.slice(i, i+q.length) + '</mark>' + txt.slice(i+q.length);
+}
+const payBadges = s => `<div class="pays">${Object.keys(PAY).map(k => s.pays.includes(k)
+  ? `<span class="pay">${icon(PAY[k][1])}${PAY[k][0]}</span>`
+  : `<span class="pay is-off">${icon(PAY[k][1])}${PAY[k][0]}</span>`).join('')}</div>`;
+function photo(s){
+  const c = cssv(CATS[s.cat].v);
+  return `<div class="photo" style="background:repeating-linear-gradient(90deg, ${c} 0 22px, rgba(255,255,255,.9) 22px 44px)"><span style="background:rgba(28,26,22,.75); padding:4px 8px; border-radius:6px">Foto da barraca</span></div>`;
+}
+function stallExpanded(s, withCta = true){
+  const c = cssv(CATS[s.cat].v);
+  return `<div class="stack">${photo(s)}
+    <div class="row" style="align-items:flex-start">${numBadge(s)}
+      <div style="flex:1; margin-left:6px"><div class="t-sub">${s.nome}</div><div class="t-caption">${CATS[s.cat].nome} · Corredor ${s.corredor}, à ${s.side} · ${distM(s)} m</div></div></div>
+    <div><div class="list-title">Vende</div><div class="pays" style="margin-top:6px">${s.prods.map(p=>`<span class="tag">${p}</span>`).join('')}</div></div>
+    <div><div class="list-title">Pagamento</div><div style="margin-top:6px">${payBadges(s)}</div></div>
+    ${withCta ? `<button class="btn btn-primary btn-block cta-sticky" data-nav="${s.id}">${icon('i-route')}Ir até lá · ${distM(s)} m</button>` : ''}</div>`;
+}
+function demoStall(id, st, detail){
+  const s = {...byId(id), x:10, y:44, cx:50};
+  const inner = stallSVG(s, st, detail) + (st === 'selected' ? pinSVG(s) : '');
+  return `<svg class="map" viewBox="0 0 100 92" width="${detail ? 200 : 118}" height="${detail ? 184 : 108}" style="background:#FBF7EE; border-radius:8px">${inner}</svg>`;
+}
+function userDemo(weak){
+  const inner = weak
+    ? `<circle cx="49" cy="50" r="34" fill="#1D5FD1" fill-opacity=".14" stroke="#1D5FD1" stroke-opacity=".5" stroke-dasharray="4 4"/>`
+    : `<circle cx="49" cy="50" r="9" fill="#1D5FD1" class="pulse"/>`;
+  return `<svg class="map" viewBox="0 0 98 90" width="98" height="90" style="background:#FBF7EE; border-radius:8px">${inner}<circle cx="49" cy="50" r="11" fill="#fff" stroke="rgba(0,0,0,.2)"/><circle cx="49" cy="50" r="8" fill="#1D5FD1"/></svg>`;
+}
+
+/* ===================== DESIGN SYSTEM ===================== */
+function swatches(el, list){
+  el.innerHTML = list.map(([v,nome,uso]) => `<div class="swatch"><div class="chipcolor" style="background:var(${v}); ${['--bg','--surface'].includes(v)?'border-bottom:1px solid var(--line)':''}"></div>
+    <div class="meta"><b>${nome}</b><code>${v} ${cssv(v)}</code><br>${uso}</div></div>`).join('');
+}
+swatches(document.getElementById('sw-base'), [
+  ['--primary','Verde feira','ações principais'], ['--primary-press','Verde pressionado','estado ativo'], ['--primary-tint','Verde claro','fundos de seleção'],
+  ['--accent','Laranja toldo','identidade, toldo'], ['--sun','Amarelo sol','destaque de resultado'],
+  ['--ink','Tinta','texto principal'], ['--ink-2','Tinta 2','texto secundário'], ['--ink-3','Tinta 3','placeholder, desabilitado'],
+  ['--line-strong','Borda forte','bordas de campos'], ['--line','Borda','divisórias'], ['--surface-2','Superfície 2','fundos de apoio'],
+  ['--bg','Creme','fundo das telas'], ['--surface','Branco','cards, sheet'],
+]);
+swatches(document.getElementById('sw-feedback'), [
+  ['--success','Sucesso','barraca registrada'], ['--warning','Alerta','GPS fraco ou desligado'], ['--error','Erro','falhas, validação'], ['--info','Info / você','ponto azul, rota, avisos'],
+]);
+swatches(document.getElementById('sw-cat'), Object.values(CATS).map(c => [c.v, c.nome, 'pin e badge']));
+
+function lum(hex){ const n = parseInt(hex.slice(1),16); return [n>>16,(n>>8)&255,n&255].map(v=>{v/=255;return v<=.03928?v/12.92:Math.pow((v+.055)/1.055,2.4)}).reduce((a,v,i)=>a+v*[.2126,.7152,.0722][i],0); }
+function ratio(a,b){ const [x,y] = [lum(a),lum(b)].sort((p,q)=>q-p); return (x+.05)/(y+.05); }
+const PAIRS = [
+  ['--ink','--bg','Texto principal sobre creme'], ['--ink-2','--bg','Texto secundário'], ['--ink-3','--bg','Placeholder'],
+  ['#FFFFFF','--primary','Botão primário'], ['--primary','--surface','Botão secundário / link'],
+  ['#FFFFFF','--accent','Texto sobre laranja'], ['--ink','--sun','Painel "Chegou!"'],
+  ['--warning','--warning-tint','Banner de alerta (ícone)'], ['--error','--surface','Mensagem de erro'], ['#FFFFFF','--info','Texto sobre azul'],
+  ['#FFFFFF','--cat-horti','Número da barraca: Hortifruti'], ['#FFFFFF','--cat-comida','Número: Comida'], ['#FFFFFF','--cat-carnes','Número: Carnes e peixes'],
+  ['#FFFFFF','--cat-arte','Número: Artesanato'], ['#FFFFFF','--cat-outros','Número: Outros'], ['--ink','--cat-horti-t','Número em pin normal (tinta sobre tom claro)'],
+];
+const val = v => v.startsWith('#') ? v : cssv(v);
+document.getElementById('contrast').innerHTML = `<tr><th>Amostra</th><th>Uso</th><th>Razão</th><th>Nível</th></tr>` +
+  PAIRS.map(([f,b,uso]) => { const r = ratio(val(f), val(b)); const lv = r >= 7 ? ['aaa','AAA'] : r >= 4.5 ? ['aa','AA'] : ['fail','Falha'];
+    return `<tr><td><span class="sample" style="color:${val(f)}; background:${val(b)}; ${b==='--surface'?'border:1px solid var(--line)':''}">Pastel 17</span></td><td>${uso}<br><code style="font-size:12px; color:var(--ink-3)">${val(f)} / ${val(b)}</code></td><td><b>${r.toFixed(2).replace('.',',')}:1</b></td><td><span class="lvl ${lv[0]}">${lv[1]}</span></td></tr>`; }).join('');
+
+document.getElementById('type-scale').innerHTML = [
+  ['t-display','Display','32 / 38 · Bold','Feira da Praça Central'],
+  ['t-title','Título','24 / 30 · Bold','Montagem do mapa'],
+  ['t-sub','Subtítulo','20 / 26 · Bold','Pastel do Zé'],
+  ['t-strong','Corpo forte','17 / 26 · Bold','Siga pelo Corredor 1'],
+  ['t-body','Corpo','17 / 26 · Regular','Ache o que procura e vá direto até a barraca. 0 O 1 l I'],
+  ['t-caption','Legenda','15 / 20 · Regular','Comida · Corredor 1 · 24 m'],
+].map(([c,n,spec,ex]) => `<div class="type-row"><div><b>${n}</b><div class="spec">${spec}</div></div><div class="${c}">${ex}</div></div>`).join('')
+ + `<div class="type-row"><div><b>Distância</b><div class="spec">36 / 40 · Bold<br>só na navegação</div></div><div style="font-size:36px; line-height:40px; font-weight:700">35 m</div></div>`;
+
+document.getElementById('space-scale').innerHTML = [['--s1',4,'ajuste fino'],['--s2',8,'entre chips'],['--s3',12,'dentro de cards'],['--s4',16,'margem lateral das telas'],['--s5',24,'entre blocos'],['--s6',32,'entre seções'],['--s7',48,'área de toque mínima']]
+  .map(([n,px,u]) => `<div class="space-row"><code>${n}</code><div class="bar" style="width:${px*3}px"></div><span>${px}px · ${u}</span></div>`).join('');
+
+document.getElementById('icons').innerHTML = [['i-search','Busca'],['i-pin','Localização'],['i-stall','Barraca'],['i-route','Rota'],['i-filter','Filtro'],['i-pix','Pix'],['i-card','Cartão'],['i-cash','Dinheiro'],['i-nfc','NFC'],['i-locate','Centralizar'],['i-arrow','Direção'],['i-gpsoff','GPS desligado'],['i-alert','Alerta'],['i-check','Confirmado'],['i-back','Voltar'],['i-close','Fechar'],['i-edit','Editar'],['i-camera','Foto']]
+  .map(([i,n]) => `<div class="icon-cell">${icon(i)}${n}</div>`).join('');
+
+document.getElementById('btn-states').innerHTML = [
+  ['Primário', '<button class="btn btn-primary">Ir até lá</button>'],
+  ['Pressionado', '<button class="btn btn-primary is-pressed">Ir até lá</button>'],
+  ['Carregando', '<button class="btn btn-primary is-loading" aria-busy="true"><span class="spinner"></span>Salvando</button>'],
+  ['Desabilitado', '<button class="btn btn-primary" disabled>Ir até lá</button>'],
+  ['Erro', '<button class="btn btn-danger">' + icon('i-alert') + 'Tentar de novo</button>'],
+  ['Secundário', '<button class="btn btn-secondary">Ver no mapa</button>'],
+  ['Secundário pressionado', '<button class="btn btn-secondary is-pressed">Ver no mapa</button>'],
+  ['Fantasma', '<button class="btn btn-ghost">Agora não</button>'],
+].map(([l,b]) => `<div class="state"><span class="lbl">${l}</span>${b}</div>`).join('');
+
+document.getElementById('pin-states').innerHTML = [
+  ['De longe', demoStall(17, 'normal', false)], ['De perto', demoStall(17, 'normal', true)],
+  ['Resultado de busca', demoStall(17, 'result', true)], ['Selecionado', demoStall(17, 'selected', true)],
+  ['Filtrado (fora)', demoStall(17, 'dim', true)], ['Não veio hoje', demoStall(28, 'absent', true)],
+  ['Você está aqui', userDemo(false)], ['Você, sinal fraco', userDemo(true)],
+].map(([l, svg]) => `<div class="state"><span class="lbl">${l}</span>${svg}</div>`).join('');
+document.getElementById('card-compact').innerHTML = stallCard(byId(17));
+document.getElementById('card-absent').innerHTML = stallCard(byId(28));
+document.getElementById('card-expanded').innerHTML = stallExpanded(byId(17));
+
+/* ===================== BOTTOM SHEET ===================== */
+function initSheet(sheet){
+  const snaps = sheet.dataset.snaps.split(',').map(Number);
+  const handle = sheet.querySelector('.sheet-handle');
+  let startY, startH;
+  handle.addEventListener('pointerdown', e => { startY = e.clientY; startH = sheet.offsetHeight; sheet.classList.add('dragging'); handle.setPointerCapture(e.pointerId); });
+  handle.addEventListener('pointermove', e => { if (startY == null) return; const max = Math.min(snaps[snaps.length-1], sheet.parentElement.clientHeight - 40);
+    sheet.style.height = Math.max(snaps[0], Math.min(max, startH + (startY - e.clientY))) + 'px'; });
+  const end = e => { if (startY == null) return; const moved = Math.abs(e.clientY - startY); startY = null; sheet.classList.remove('dragging');
+    const h = sheet.offsetHeight; let target;
+    if (moved < 6){ const i = snaps.findIndex(s => s >= h - 2); target = snaps[(i + 1) % snaps.length]; }
+    else target = snaps.reduce((a,b) => Math.abs(b-h) < Math.abs(a-h) ? b : a);
+    sheet.style.height = Math.min(target, sheet.parentElement.clientHeight - 40) + 'px'; };
+  handle.addEventListener('pointerup', end); handle.addEventListener('pointercancel', end);
+}
+document.querySelectorAll('.sheet').forEach(initSheet);
+
+/* ===================== PROTÓTIPO ===================== */
+const SCREENS = [
+  {id:'s-entrada', nome:'1. Entrada', grupo:'Cliente', notes:[
+    ['Um botão principal só', 'A tela pede uma decisão: permitir a localização. Todo o resto é contexto.'],
+    ['O motivo vem antes do pedido do sistema', 'O pop-up nativo de permissão é seco e assusta. Explicar em uma frase antes aumenta a taxa de aceite, e a frase deixa claro que a posição não é guardada.'],
+    ['Saída sem culpa', '"Ver o mapa sem localização" é fantasma, mas existe. O mapa precisa ser útil mesmo para quem nega.'],
+    ['Toldo listrado', 'É a assinatura visual da feira. Aparece no topo e na foto padrão da barraca, e só ali, para não virar poluição.']]},
+  {id:'s-mapa', nome:'2. Mapa principal', grupo:'Cliente', notes:[
+    ['Busca no topo, ações embaixo', 'A busca é tocada uma vez e o teclado sobe. As ações repetidas (lista, centralizar) ficam no terço inferior, ao alcance do polegar.'],
+    ['A barraca parece uma barraca', 'Toldo listrado na cor da categoria e o ícone do produto principal. O cliente reconhece o pastel ou o peixe sem ler nada, como reconhece a barraca de verdade pela mercadoria.'],
+    ['Abre de perto, no corredor do cliente', 'O mapa começa mostrando o Corredor 1 com o nome de cada barraca, que é o que o cliente tem na frente dele. Arraste para andar pelo mapa.'],
+    ['Dois níveis de zoom', 'De longe aparecem ícone e número (o mesmo da placa física). De perto, ícone e nome. Texto pequeno demais para ler não aparece.'],
+    ['Zoom com botão, não só com pinça', 'Muita gente não sabe fazer pinça. "Ver feira inteira" e os botões + e - deixam isso explícito.'],
+    ['Pontos de referência', 'Banheiros, informações, caixa 24h e entrada. As pessoas se orientam por esses pontos, não por números.'],
+    ['Limite dos ícones', 'O protótipo usa emoji, que muda de desenho entre Android, iPhone e Windows. Para produção, vale encomendar um conjunto de ícones próprio no estilo dos ícones do sistema.']]},
+  {id:'s-busca', nome:'3. Busca', grupo:'Cliente', notes:[
+    ['Busca por produto, não só por nome', '"pastel" encontra o Pastel do Zé, a Pastelaria Yoshida e o Pastel da Kika. Ninguém sabe o nome da barraca, sabe o que quer comer. Digite "pix", "orgânicos" ou "queijo".'],
+    ['Resultado no mapa e na lista ao mesmo tempo', 'A lista diz o que é, o mapa diz onde fica. Os resultados ganham borda amarela, que se destaca no sol mais que qualquer tom de verde.'],
+    ['Ordenado por distância', 'Entre três pastelarias, a mais perto é a resposta mais útil.'],
+    ['Sem resultado é um estado desenhado', 'Apague a busca e digite "sushi" para ver.']]},
+  {id:'s-detalhe', nome:'4. Detalhe da barraca', grupo:'Cliente', notes:[
+    ['Formas de pagamento visíveis sem abrir nada', 'É a pergunta mais comum na feira. "Não aceita cartão" aparece riscado, em vez de simplesmente sumir, para não deixar dúvida.'],
+    ['Distância no botão', '"Ir até lá · 24 m" responde se vale a pena antes do toque.'],
+    ['Lado do corredor', '"Corredor 1, à direita" ajuda quem prefere não olhar o celular enquanto anda.']]},
+  {id:'s-nav', nome:'5. Navegação', grupo:'Cliente', notes:[
+    ['A distância é o maior texto do app', 'Andando, com sacola na mão, o cliente só bate o olho. O número precisa ser lido em meio segundo.'],
+    ['Instrução em linguagem de feira', '"Siga pelo Corredor 2" em vez de "siga 30 m para o norte".'],
+    ['Chegada muda de cor', 'O painel inteiro vira amarelo. Dá para perceber com visão periférica, sem ler.'],
+    ['Limite honesto', 'A seta aqui aponta no sentido do mapa. No app real, ela gira com a bússola do celular, que é imprecisa perto de estruturas metálicas das barracas. Precisa ser testado em campo.']]},
+  {id:'s-gps', nome:'6a. GPS negado', grupo:'Erros', notes:[
+    ['O mapa continua funcionando', 'Sem localização, perde-se o ponto azul, mas a busca, o mapa e os números das barracas continuam úteis.'],
+    ['Banner, não modal', 'Um modal bloquearia o uso. O banner informa e oferece o conserto, sem impedir nada.']]},
+  {id:'s-fraco', nome:'6b. Sinal fraco', grupo:'Erros', notes:[
+    ['Mostrar a incerteza, não esconder', 'O círculo tracejado mostra a área onde o cliente pode estar. Um ponto preciso e errado é pior que uma área honesta.'],
+    ['Plano B embutido na mensagem', 'O número das barracas no mapa bate com a placa física, então o cliente consegue se orientar sem GPS.']]},
+  {id:'s-ausente', nome:'6c. Barraca não veio', grupo:'Erros', notes:[
+    ['A barraca aparece, mas riscada', 'Se sumisse do mapa, o cliente acharia que o app está errado. Riscada, a mensagem é clara: ela existe, só não veio hoje.'],
+    ['Alternativas na hora', 'O cliente queria banana, não a barraca. Por isso o sheet sugere as barracas parecidas mais próximas.'],
+    ['Como o sistema sabe', 'Toda barraca que não teve a etiqueta lida na montagem do dia é marcada como ausente. É um efeito colateral útil do fluxo de NFC.']]},
+  {id:'s-org', nome:'7. Montagem (NFC)', grupo:'Organizador', notes:[
+    ['Um gesto, uma confirmação', 'Encosta, vibra, aparece o nome. O organizador confere com o olho e passa para a próxima barraca. Use o botão azul tracejado para simular uma leitura.'],
+    ['A precisão do GPS aparece na confirmação', 'Se a leitura veio com 25 m de erro, o organizador precisa saber na hora para repetir, e não descobrir depois pela reclamação de um cliente.'],
+    ['Progresso com "faltam X"', 'Às 6h da manhã, com pressa, "faltam 18" é mais útil que "32 de 50".'],
+    ['Ponto a validar', 'Esta tela é o teste da ideia do NFC. Se ler 50 etiquetas levar mais de 15 minutos na feira real, o fluxo precisa mudar.']]},
+  {id:'s-feirante', nome:'8. Cadastro do feirante', grupo:'Feirante', notes:[
+    ['"O que você vende" é o campo mais importante', 'É dele que a busca vive. Por isso é obrigatório e a mensagem de erro explica o motivo. Remova todos os produtos e toque em Salvar para ver.'],
+    ['Chips em vez de dropdown', 'Categoria e pagamento ficam todos visíveis, com um toque cada. Dropdown é difícil para quem tem pouca familiaridade com celular.'],
+    ['Sem campo de localização', 'O feirante não marca onde está. Isso vem da leitura da etiqueta na montagem, e evita posições erradas.']]},
+];
+const state = { screen:'s-entrada', filter:null, sel:17, navWalked:0, navTimer:null, orgCount:31, orgOk:false, tags:[...byId(17).prods], fcat:'comida', fpay:new Set(byId(17).pays) };
+const USER = {...ENTRY};
+
+function renderNav(){
+  const nav = document.getElementById('proto-nav'); let g = '', h = '';
+  SCREENS.forEach(s => { if (s.grupo !== g){ g = s.grupo; h += `<h3>${g}</h3>`; } h += `<button data-go="${s.id}" ${state.screen===s.id?'aria-current="true"':''}>${s.nome}</button>`; });
+  nav.innerHTML = h;
+}
+function renderNotes(){
+  const s = SCREENS.find(x => x.id === state.screen);
+  const flow = s.grupo === 'Cliente' ? 'Fluxo do cliente: entrada > mapa > busca > detalhe > navegação. Os botões dentro do celular funcionam.' : `Fluxo: ${s.grupo}`;
+  document.getElementById('notes').innerHTML = `<h3>${s.nome}</h3><p class="flow">${flow}</p><ul>${s.notes.map(([t,d]) => `<li><b>${t}</b>${d}</li>`).join('')}</ul>`;
+}
+function go(id){
+  if (state.navTimer){ clearInterval(state.navTimer); state.navTimer = null; }
+  state.screen = id;
+  document.querySelectorAll('.screen').forEach(s => s.classList.toggle('active', s.id === id));
+  ({ 's-mapa':drawMapa, 's-busca':drawBusca, 's-detalhe':drawDetalhe, 's-nav':startNav, 's-gps':drawGps, 's-fraco':drawFraco, 's-ausente':drawAusente, 's-org':drawOrg, 's-feirante':drawFeirante }[id] || (()=>{}))();
+  renderNav(); renderNotes();
+}
+const mapEl = k => document.querySelector(`[data-map="${k}"]`);
+
+/* 2 mapa */
+const FILTERS = [ ['Todas', null], ...Object.entries(CATS).map(([k,c]) => [c.nome, s => s.cat === k, c.v]), ['Aceita Pix', s => s.pays.includes('pix'), null, 'i-pix'] ];
+function drawMapa(){
+  const chips = document.querySelector('[data-chips="mapa"]');
+  chips.innerHTML = FILTERS.map(([n,,v,ic], i) => `<button class="chip" data-f="${i}" aria-pressed="${(state.filter ?? 0) === i}">${v?`<span class="dot" style="background:var(${v})"></span>`:''}${ic?icon(ic,'width:20px;height:20px'):''}${n}</button>`).join('');
+  const f = FILTERS[state.filter ?? 0][1];
+  if (!state.vb) resetView();
+  drawMapaSVG();
+  const near = STALLS.filter(s => !s.absent && (!f || f(s))).sort((a,b) => distM(a) - distM(b));
+  document.getElementById('mapa-sheet').innerHTML = `<div class="row" style="justify-content:space-between"><b class="t-sub">${f ? near.length + ' barracas' : '49 barracas hoje'}</b><span class="t-caption">1 não veio</span></div>
+    <div class="list-title">Perto de você</div>${near.slice(0,8).map(s => stallCard(s)).join('')}`;
+}
+document.addEventListener('click', e => {
+  const f = e.target.closest('[data-f]'); if (f){ state.filter = +f.dataset.f || null; drawMapa(); return; }
+  const g = e.target.closest('[data-go]'); if (g){ go(g.dataset.go); return; }
+  const o = e.target.closest('[data-open]'); if (o && o.closest('.phone')){ openStall(+o.dataset.open); return; }
+  const st = e.target.closest('.phone .stall'); if (st && !['s-nav','s-org'].includes(state.screen)){ openStall(+st.dataset.id); return; }
+  const n = e.target.closest('[data-nav]'); if (n && n.closest('.phone')){ state.sel = +n.dataset.nav; go('s-nav'); return; }
+});
+function openStall(id){ state.sel = id; go(byId(id).absent ? 's-ausente' : 's-detalhe'); }
+
+/* zoom e arraste do mapa principal: o viewBox é a "câmera". De perto (largura visível até 300) mostra nomes. */
+const SHEET_PEEK = 110, CLOSE_W = 225, DETAIL_MAX_W = 300;
+function drawMapaSVG(){
+  const svg = mapEl('mapa'), detail = state.vb.w <= DETAIL_MAX_W;
+  renderMap(svg, {user:USER, filter:FILTERS[state.filter ?? 0][1], detail});
+  svg._detail = detail;
+  applyVB();
+}
+/* tamanho na tela; se a aba estiver escondida, usa o tamanho padrão do celular */
+const mapSize = svg => ({w: svg.clientWidth || 390, h: svg.clientHeight || 620});
+function resetView(w = CLOSE_W){
+  const sz = mapSize(mapEl('mapa')), k = w / sz.w, h = sz.h * k;
+  state.vb = {w, h, x: USER.x - w / 2, y: USER.y - h + (SHEET_PEEK + 40) * k};
+}
+function applyVB(){
+  const svg = mapEl('mapa'), vb = state.vb, sz = mapSize(svg);
+  vb.h = vb.w * sz.h / sz.w;
+  vb.x = vb.w >= W ? (W - vb.w) / 2 : Math.max(-20, Math.min(W + 20 - vb.w, vb.x));
+  vb.y = Math.max(-20, Math.min(H + 20 - vb.h + SHEET_PEEK * vb.w / sz.w, vb.y));
+  svg.setAttribute('viewBox', `${vb.x} ${vb.y} ${vb.w} ${vb.h}`);
+  if ((vb.w <= DETAIL_MAX_W) !== svg._detail) drawMapaSVG();
+  document.getElementById('zoom-toggle').textContent = vb.w <= DETAIL_MAX_W ? 'Ver feira inteira' : 'Ver de perto';
+}
+function zoomBy(f, pt){
+  const svg = mapEl('mapa'), r = svg.getBoundingClientRect(), vb = state.vb;
+  const nw = Math.max(150, Math.min(W + 40, vb.w * f)), k = nw / vb.w;
+  const px = pt ? vb.x + (pt.x - r.left) / r.width * vb.w : vb.x + vb.w / 2;
+  const py = pt ? vb.y + (pt.y - r.top) / r.height * vb.h : vb.y + vb.h / 2;
+  Object.assign(vb, {x: px - (px - vb.x) * k, y: py - (py - vb.y) * k, w: nw, h: vb.h * k});
+  applyVB();
+}
+(function(){
+  const svg = mapEl('mapa'), ptrs = new Map(); let moved = 0, pinch = null;
+  svg.addEventListener('pointerdown', e => { ptrs.set(e.pointerId, {x:e.clientX, y:e.clientY}); if (ptrs.size === 1) moved = 0; });
+  window.addEventListener('pointermove', e => {
+    if (!ptrs.has(e.pointerId)) return;
+    const prev = ptrs.get(e.pointerId), cur = {x:e.clientX, y:e.clientY};
+    ptrs.set(e.pointerId, cur);
+    if (ptrs.size === 1){
+      const k = state.vb.w / svg.clientWidth;
+      state.vb.x -= (cur.x - prev.x) * k; state.vb.y -= (cur.y - prev.y) * k;
+      moved += Math.abs(cur.x - prev.x) + Math.abs(cur.y - prev.y);
+      applyVB();
+    } else if (ptrs.size === 2){
+      const [a, b] = [...ptrs.values()], d = Math.hypot(a.x - b.x, a.y - b.y);
+      if (pinch) zoomBy(pinch / d, {x:(a.x + b.x) / 2, y:(a.y + b.y) / 2});
+      pinch = d; moved += 10;
+    }
+  });
+  const up = e => { ptrs.delete(e.pointerId); if (ptrs.size < 2) pinch = null; };
+  window.addEventListener('pointerup', up); window.addEventListener('pointercancel', up);
+  svg.addEventListener('wheel', e => { e.preventDefault(); zoomBy(e.deltaY > 0 ? 1.15 : 1 / 1.15, {x:e.clientX, y:e.clientY}); }, {passive:false});
+  // arrastar não pode virar toque na barraca
+  svg.addEventListener('click', e => { if (moved > 8) e.stopPropagation(); }, true);
+  document.getElementById('z-in').addEventListener('click', () => zoomBy(1 / 1.4));
+  document.getElementById('z-out').addEventListener('click', () => zoomBy(1.4));
+  document.getElementById('z-me').addEventListener('click', () => { resetView(); applyVB(); });
+  document.getElementById('zoom-toggle').addEventListener('click', () => { resetView(state.vb.w <= DETAIL_MAX_W ? W + 10 : CLOSE_W); applyVB(); });
+})();
+
+/* 3 busca */
+function search(q){
+  const n = norm(q.trim()); if (!n) return [];
+  return STALLS.filter(s => norm([s.nome, CATS[s.cat].nome, ...s.prods, ...s.pays.map(p => PAY[p][0])].join(' ')).includes(n))
+    .sort((a,b) => (a.absent - b.absent) || distM(a) - distM(b));
+}
+function drawBusca(){
+  const input = document.getElementById('q'), q = input.value;
+  const res = search(q), box = document.getElementById('busca-results');
+  renderMap(mapEl('busca'), {user:USER, highlight:new Set(res.map(s => s.id)), filter: res.length ? (s => res.includes(s)) : null});
+  input.closest('.search').classList.toggle('is-error', q.trim() && !res.length);
+  if (!q.trim()) box.innerHTML = `<div class="list-title">Buscas comuns</div><div class="pays">${['pastel','orgânicos','queijo','caldo de cana','pix'].map(t => `<button class="chip" data-q="${t}">${t}</button>`).join('')}</div>`;
+  else if (!res.length) box.innerHTML = `<p class="field-msg err" style="margin:0">${icon('i-alert','width:18px;height:18px')}Nenhuma barraca vende "${q}" hoje.</p><p class="t-caption" style="margin:0">Tente outra palavra, como o nome do produto.</p>`;
+  else box.innerHTML = `<div class="list-title">${res.length} ${res.length>1?'barracas':'barraca'} · mais perto primeiro</div>` + res.map(s => stallCard(s, {mark:q.trim()})).join('');
+}
+document.getElementById('q').addEventListener('input', drawBusca);
+document.getElementById('q-clear').addEventListener('click', () => { const i = document.getElementById('q'); i.value = ''; i.focus(); drawBusca(); });
+document.addEventListener('click', e => { const t = e.target.closest('[data-q]'); if (t){ document.getElementById('q').value = t.dataset.q; drawBusca(); } });
+
+/* sobe o mapa para a barraca ficar visível acima do sheet */
+function focusMap(svg, cy, sheetH){
+  const wrap = svg.parentElement, scale = wrap.clientWidth / W;
+  const visible = (wrap.clientHeight - sheetH) / scale;
+  const shift = Math.max(0, Math.min(H - visible, cy - visible / 2 - 20));
+  svg.style.transform = `translateY(${-shift * scale}px)`;
+}
+
+/* 4 detalhe */
+function drawDetalhe(){
+  const s = byId(state.sel);
+  renderMap(mapEl('detalhe'), {user:USER, selected:s.id, route:routeTo(s)});
+  focusMap(mapEl('detalhe'), s.cy, 470);
+  document.getElementById('detalhe-body').innerHTML = `<div class="row" style="justify-content:flex-end; margin:-6px 0 4px"><button class="icon-btn" data-go="s-mapa" aria-label="Fechar">${icon('i-close')}</button></div>` + stallExpanded(s);
+}
+
+/* 5 navegação */
+function startNav(){ state.navWalked = 0; drawNav(); document.getElementById('nav-sim').textContent = '▶ Simular caminhada'; }
+function drawNav(){
+  const s = byId(state.sel), r = routeTo(s), total = routeLen(r);
+  const walked = Math.min(state.navWalked, total), p = pointAt(r, walked);
+  const remainM = Math.round((total - walked) * M_PER_PX);
+  const arrived = remainM <= 3;
+  renderMap(mapEl('nav'), {user:p, selected:s.id, route:[p, ...r.slice(p.seg)]});
+  let instr, rot = 0;
+  if (arrived) instr = `${s.nome} está à sua ${s.side}.`;
+  else if (r.length === 3 && p.seg === 1){ const toTurn = Math.round((segLen(p, r[1])) * M_PER_PX); rot = 90; instr = `Siga ${toTurn} m e vire à esquerda no Corredor ${s.corredor}.`; }
+  else instr = `Siga pelo Corredor ${s.corredor}. A barraca fica à ${s.side}.`;
+  document.getElementById('nav-dir').innerHTML = `<div class="dir${arrived?' arrived':''}"><div class="arrow">${arrived ? icon('i-check') : `<svg class="i" style="transform:rotate(${rot}deg)"><use href="#i-arrow"/></svg>`}</div><div><div class="meters">${arrived ? 'Chegou!' : remainM + ' m'}</div><div class="instr">${instr}</div></div></div>`;
+  document.getElementById('nav-dest').innerHTML = `<div class="row">${numBadge(s)}<div style="margin-left:6px"><b>${s.nome}</b><div class="t-caption">${s.pays.map(p => PAY[p][0]).join(' · ')}</div></div></div>`;
+  if (arrived && state.navTimer){ clearInterval(state.navTimer); state.navTimer = null; document.getElementById('nav-sim').textContent = '↺ Recomeçar'; }
+}
+document.getElementById('nav-sim').addEventListener('click', () => {
+  const btn = document.getElementById('nav-sim');
+  if (state.navTimer){ clearInterval(state.navTimer); state.navTimer = null; btn.textContent = '▶ Continuar'; return; }
+  const s = byId(state.sel); if (state.navWalked >= routeLen(routeTo(s)) - 3/M_PER_PX){ state.navWalked = 0; }
+  btn.textContent = '❚❚ Pausar';
+  state.navTimer = setInterval(() => { state.navWalked += 1.5 / M_PER_PX; drawNav(); }, 350);
+});
+
+/* 6 erros */
+function drawGps(){ renderMap(mapEl('gps'), {}); }
+function drawFraco(){ renderMap(mapEl('fraco'), {user:{x:118, y:540}, accuracy:150}); }
+function drawAusente(){
+  const s = byId(ABSENT.has(state.sel) ? state.sel : 28);
+  renderMap(mapEl('ausente'), {user:USER, selected:s.id});
+  focusMap(mapEl('ausente'), s.cy, 470);
+  const alt = STALLS.filter(x => !x.absent && x.prods.some(p => /banana|fruta/.test(norm(p)))).sort((a,b) => distM(a) - distM(b)).slice(0,3);
+  document.getElementById('ausente-body').innerHTML = `<div class="stack">
+    <div class="row" style="align-items:flex-start"><span class="num emo-num" style="background:#fff; border:2px dashed var(--ink-3); filter:grayscale(1)">${s.icon}<small>${s.id}</small></span><div style="flex:1; margin-left:6px"><div class="t-sub">${s.nome}</div><div class="t-caption">${CATS[s.cat].nome} · Corredor ${s.corredor}</div></div><button class="icon-btn" data-go="s-mapa" aria-label="Fechar">${icon('i-close')}</button></div>
+    <div class="banner warn">${icon('i-info')}<div><span class="b-title">Esta barraca não veio hoje</span>A etiqueta dela não foi lida na montagem desta manhã.</div></div>
+    <div class="list-title">Também vendem banana e frutas</div>${alt.map(x => stallCard(x)).join('')}</div>`;
+}
+
+/* 7 organizador */
+function drawOrg(){
+  const n = state.orgCount, s = byId(17);
+  document.getElementById('org-count').textContent = `${n} de 50 barracas`;
+  document.getElementById('org-left').textContent = `faltam ${50-n}`;
+  document.getElementById('org-bar').style.width = (n/50*100) + '%';
+  const recent = [byId(16), byId(15), byId(14)];
+  document.getElementById('org-body').innerHTML = state.orgOk ? `
+    <div class="nfc-ring ok">${icon('i-check')}</div>
+    <div><div class="t-title">Barraca ${s.id} - ${s.nome}</div><div class="t-strong" style="color:var(--success)">registrada</div></div>
+    <div class="banner info" style="text-align:left">${icon('i-locate')}<div><span class="b-title">Posição salva com precisão de 4 m</span>Corredor 1, ao lado da barraca 16.</div></div>
+    <button class="btn btn-primary btn-block" id="org-next" style="margin-top:auto">Próxima barraca</button>
+    <button class="btn btn-ghost btn-block" id="org-undo">Desfazer esta leitura</button>`
+  : `
+    <div class="nfc-ring">${icon('i-nfc')}</div>
+    <div><div class="t-title">Encoste o celular na etiqueta</div><p class="t-body" style="margin:6px 0 0; color:var(--ink-2)">A etiqueta fica na frente da barraca, embaixo do número.</p></div>
+    <button class="btn demo-ctl btn-block" id="org-read">${icon('i-nfc')}Simular leitura (protótipo)</button>
+    <div style="text-align:left" class="stack"><div class="list-title">Últimas registradas</div>${recent.map(x => `<div class="row" style="gap:12px"><span class="num" style="background:var(${CATS[x.cat].v}); width:40px; height:40px; font-size:16px">${x.id}</span><span style="flex:1">${x.nome}</span>${icon('i-check','color:var(--success)')}</div>`).join('')}</div>`;
+}
+document.addEventListener('click', e => {
+  if (e.target.closest('#org-read')){ if (navigator.vibrate) navigator.vibrate(80); state.orgOk = true; state.orgCount = 32; drawOrg(); }
+  if (e.target.closest('#org-next')){ state.orgOk = false; drawOrg(); }
+  if (e.target.closest('#org-undo')){ state.orgOk = false; state.orgCount = 31; drawOrg(); }
+});
+
+/* 8 feirante */
+function drawFeirante(){
+  document.getElementById('f-cat').innerHTML = Object.entries(CATS).map(([k,c]) => `<button class="chip" data-fcat="${k}" aria-pressed="${state.fcat===k}"><span class="dot" style="background:var(${c.v})"></span>${c.nome}</button>`).join('');
+  document.getElementById('f-pay').innerHTML = Object.entries(PAY).map(([k,[n,i]]) => `<button class="chip" data-fpay="${k}" aria-pressed="${state.fpay.has(k)}">${icon(i,'width:20px;height:20px')}${n}</button>`).join('');
+  document.getElementById('f-tags').innerHTML = state.tags.map((t,i) => `<span class="tag-x">${t}<button data-rm="${i}" aria-label="Remover ${t}">${icon('i-close')}</button></span>`).join('');
+}
+document.addEventListener('click', e => {
+  const c = e.target.closest('[data-fcat]'); if (c){ state.fcat = c.dataset.fcat; drawFeirante(); }
+  const p = e.target.closest('[data-fpay]'); if (p){ const k = p.dataset.fpay; state.fpay.has(k) ? state.fpay.delete(k) : state.fpay.add(k); drawFeirante(); }
+  const r = e.target.closest('[data-rm]'); if (r){ state.tags.splice(+r.dataset.rm, 1); drawFeirante(); }
+});
+function addTag(){ const i = document.getElementById('f-prod'); const v = i.value.trim(); if (v){ state.tags.push(v); i.value = ''; document.getElementById('f-err').hidden = true; i.classList.remove('is-error'); drawFeirante(); } }
+document.getElementById('f-add').addEventListener('click', addTag);
+document.getElementById('f-prod').addEventListener('keydown', e => { if (e.key === 'Enter') addTag(); });
+document.getElementById('f-save').addEventListener('click', () => {
+  const btn = document.getElementById('f-save'), err = document.getElementById('f-err');
+  if (!state.tags.length){ err.hidden = false; document.getElementById('f-prod').classList.add('is-error'); document.getElementById('f-prod').focus(); return; }
+  btn.classList.add('is-loading'); btn.innerHTML = '<span class="spinner"></span>Salvando';
+  setTimeout(() => { btn.classList.remove('is-loading'); btn.innerHTML = icon('i-check') + 'Salvo'; setTimeout(() => btn.textContent = 'Salvar alterações', 1500); }, 900);
+});
+
+/* abas */
+document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => {
+  document.querySelectorAll('.tab').forEach(x => x.setAttribute('aria-selected', x === t));
+  document.querySelectorAll('.view').forEach(v => v.classList.toggle('active', v.id === t.dataset.view));
+  if (state.screen === 's-mapa'){ resetView(); drawMapaSVG(); }
+}));
+
+go('s-entrada');
+</script>
+</body>
+</html>
