@@ -2,7 +2,9 @@
 
 Mapa digital para feiras de rua. O cliente escaneia um QR code na entrada, vê todas as barracas no mapa, busca por produto ("pastel", "orgânicos", "aceita Pix") e recebe a direção e a distância até a barraca.
 
-> **Status: protótipo.** Os dados são fictícios, o GPS é simulado e ainda não existe backend. Este repositório serve para mostrar como o produto vai funcionar e para validar a ideia com usuários reais antes de construir o MVP.
+> **Status:** este repositório tem duas partes.
+> - **Protótipo** (`index.html`, publicado no GitHub Pages): design system e telas, com dados fictícios.
+> - **MVP** (pasta [`app/`](app/)): React + Supabase, com 100 barracas fictícias e montagem do mapa por NFC. Veja o [README do app](app/README.md).
 
 ## Como abrir
 

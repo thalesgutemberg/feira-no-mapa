@@ -1,0 +1,30 @@
+/* Tokens do design system do protótipo. Tema só claro: o uso principal é sob sol forte. */
+:root {
+  --bg: #FFFBF2; --surface: #FFFFFF; --surface-2: #F5EFE2;
+  --ink: #1C1A16; --ink-2: #4A4539; --ink-3: #6B6352;
+  --line: #E3DAC6; --line-strong: #7A715F;
+
+  --primary: #185C31; --primary-press: #0F4423; --primary-tint: #E1EFE4;
+  --accent: #C2410C; --accent-tint: #FDE9DD;
+  --sun: #F6C343; --sun-tint: #FFF4D6;
+  --info: #1D5FD1; --info-tint: #E3ECFB;
+  --success: #185C31; --success-tint: #E1EFE4;
+  --warning: #8A5A00; --warning-tint: #FFF4D6;
+  --error: #B42318; --error-tint: #FDE7E4;
+
+  --cat-hortifruti: #2E7D32; --cat-hortifruti-t: #E3F1E3;
+  --cat-comida: #C2410C;     --cat-comida-t: #FBE6DA;
+  --cat-carnes: #9F1239;     --cat-carnes-t: #F7DDE4;
+  --cat-artesanato: #6D28D9; --cat-artesanato-t: #ECE4FB;
+  --cat-outros: #475569;     --cat-outros-t: #E5E9EF;
+
+  --mapa-chao: #E9E1CF; --mapa-rua: #FBF7EE;
+
+  --font: 'Atkinson Hyperlegible', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --emoji: 'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji', sans-serif;
+
+  --r-sm: 8px; --r-md: 12px; --r-lg: 20px; --r-pill: 999px;
+  --e1: 0 1px 2px rgba(28,26,22,.14), 0 1px 1px rgba(28,26,22,.06);
+  --e2: 0 6px 16px rgba(28,26,22,.16);
+  --e3: 0 -8px 28px rgba(28,26,22,.20);
+}
