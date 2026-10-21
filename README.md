@@ -6,9 +6,9 @@ Mapa digital para feiras de rua. O cliente escaneia um QR code na entrada, vê t
 
 ## Como abrir
 
-O protótipo é um único arquivo HTML, sem build e sem dependências.
+**Online:** https://thalesgutemberg.github.io/feira-no-mapa/
 
-Para ver na hora, abra o `index.html` no navegador. Para servir na rede local:
+O protótipo é um único arquivo HTML, sem build e sem dependências. Para rodar localmente, abra o `index.html` no navegador. Para servir na rede local:
 
 ```bash
 python -m http.server 8787
