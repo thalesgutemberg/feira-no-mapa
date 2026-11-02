@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import Icon from '../../components/Icon.jsx';
 import { Selo } from '../../components/Barraca.jsx';
 import { Banner } from '../../components/Avisos.jsx';
-import { api } from '../../data/api.js';
+import { api, emDemonstracao } from '../../data/api.js';
 import { useFeira } from '../../data/FeiraContext.jsx';
 import { CATEGORIAS, PAGAMENTOS, corDa } from '../../lib/categorias.js';
 import { escutarEtiquetas, nfcSuportado, uidAleatorio, vibrar } from '../../lib/nfc.js';
@@ -85,7 +85,9 @@ export default function EditarBarraca() {
           {uid && <code style={{ fontSize: 15 }}>{uid}</code>}
           {nfcSuportado
             ? <button className="btn btn-secondary btn-block" disabled={lendo} onClick={lerParaVincular}>{lendo ? <><span className="spinner" />Encoste a etiqueta nova</> : <><Icon nome="nfc" />{uid ? 'Trocar etiqueta' : 'Vincular etiqueta'}</>}</button>
-            : <button className="btn btn-demo btn-block" onClick={() => vincular(uidAleatorio())}><Icon nome="nfc" />{uid ? 'Trocar por etiqueta nova (simulado)' : 'Vincular etiqueta nova (simulado)'}</button>}
+            : emDemonstracao
+              ? <button className="btn btn-demo btn-block" onClick={() => vincular(uidAleatorio())}><Icon nome="nfc" />{uid ? 'Trocar por etiqueta nova (simulado)' : 'Vincular etiqueta nova (simulado)'}</button>
+              : <Banner tipo="alerta" icone="alert">Este aparelho não lê NFC. Para vincular ou trocar a etiqueta, abra esta página no Chrome do Android.</Banner>}
           <span className="t-caption">Sem etiqueta vinculada, a barraca nunca entra no mapa: é a leitura dela que coloca a barraca no dia.</span>
         </div>
 

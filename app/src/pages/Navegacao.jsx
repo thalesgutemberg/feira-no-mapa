@@ -6,6 +6,7 @@ import { Selo } from '../components/Barraca.jsx';
 import { AvisoLocalizacao } from '../components/Avisos.jsx';
 import { useFeira } from '../data/FeiraContext.jsx';
 import { useLocalizacao } from '../data/LocalizacaoContext.jsx';
+import { emDemonstracao } from '../data/api.js';
 import { PAGAMENTOS } from '../lib/categorias.js';
 import { calcularRota, comprimento, direcaoInicial, frenteDaVaga, instrucao, pontoNaRota } from '../lib/rota.js';
 
@@ -20,8 +21,10 @@ export default function Navegacao() {
   const barraca = f.porNumero(numero);
   const vaga = barraca ? f.vagaDa(barraca) : null;
 
-  // Sem GPS de verdade (demonstração ou fora da feira), a caminhada é simulada ao longo da rota inicial.
-  const simulando = !loc.pos || loc.simulada;
+  // Na demonstração, sem GPS de verdade, a caminhada é simulada ao longo da rota inicial.
+  // Em produção, sem posição não há rota: a tela indica só onde fica a barraca.
+  const simulando = emDemonstracao && (!loc.pos || loc.simulada);
+  const semPosicao = !simulando && !loc.pos;
   const origem = loc.pos ?? f.planta.entrada;
   const rotaInicial = useMemo(() => (vaga ? calcularRota(f.planta, origem, vaga) : null), [vaga, f.planta]); // eslint-disable-line react-hooks/exhaustive-deps
   const [andado, setAndado] = useState(0);
@@ -29,7 +32,7 @@ export default function Navegacao() {
   const timer = useRef(null);
 
   const pos = simulando && rotaInicial ? pontoNaRota(rotaInicial, andado) : origem;
-  const rota = vaga ? calcularRota(f.planta, pos, vaga) : null;
+  const rota = vaga && !semPosicao ? calcularRota(f.planta, pos, vaga) : null;
   const passo = rota ? instrucao(rota, vaga, barraca) : null;
 
   useEffect(() => {
@@ -51,20 +54,30 @@ export default function Navegacao() {
       <div className="mapwrap">
         <FeiraMap
           planta={f.planta} vagas={f.vagas} ocupacao={f.ocupacao} selecionada={barraca.id}
-          usuario={pos} precisao={simulando ? null : loc.precisao} rota={passo.chegou ? null : rota}
-          enquadrar={[origem, frenteDaVaga(f.planta, vaga)]} chaveCamera={`nav-${barraca.id}`}
-          margemSuperior={120} margemInferior={170}
+          usuario={semPosicao ? null : pos} precisao={simulando ? null : loc.precisao} rota={passo?.chegou ? null : rota}
+          enquadrar={semPosicao ? [frenteDaVaga(f.planta, vaga)] : [origem, frenteDaVaga(f.planta, vaga)]} chaveCamera={`nav-${barraca.id}-${semPosicao}`}
+          margemSuperior={semPosicao ? 230 : 120} margemInferior={170}
         />
         <div className="mapa-topo">
-          <div className={`dir${passo.chegou ? ' chegou' : ''}`} aria-live="polite">
-            <div className="seta">
-              {passo.chegou ? <Icon nome="check" /> : <svg className="i" style={{ transform: `rotate(${direcaoInicial(rota)}deg)` }}><use href="#i-arrow" /></svg>}
+          {semPosicao ? (
+            <div className="dir" aria-live="polite">
+              <div className="seta"><Icon nome="pin" /></div>
+              <div>
+                <div className="metros">Vaga {vaga.codigo}</div>
+                <div className="texto">Corredor {vaga.corredor}, fileira {vaga.fileira}. Sem a sua localização, não dá para calcular a rota.</div>
+              </div>
             </div>
-            <div>
-              <div className="metros">{passo.chegou ? 'Chegou!' : `${passo.metros} m`}</div>
-              <div className="texto">{passo.texto}</div>
+          ) : (
+            <div className={`dir${passo.chegou ? ' chegou' : ''}`} aria-live="polite">
+              <div className="seta">
+                {passo.chegou ? <Icon nome="check" /> : <svg className="i" style={{ transform: `rotate(${direcaoInicial(rota)}deg)` }}><use href="#i-arrow" /></svg>}
+              </div>
+              <div>
+                <div className="metros">{passo.chegou ? 'Chegou!' : `${passo.metros} m`}</div>
+                <div className="texto">{passo.texto}</div>
+              </div>
             </div>
-          </div>
+          )}
           {!simulando && <AvisoLocalizacao loc={loc} />}
         </div>
       </div>
@@ -74,7 +87,7 @@ export default function Navegacao() {
           <div><b>{barraca.nome}</b><div className="t-caption">Vaga {vaga.codigo} · {barraca.pagamentos.map(p => PAGAMENTOS[p].nome).join(' · ')}</div></div>
         </div>
         <div className="row">
-          <button className="btn btn-secondary" style={{ flex: 1 }} onClick={() => navegar('/mapa')}>{passo.chegou ? 'Voltar ao mapa' : 'Encerrar'}</button>
+          <button className="btn btn-secondary" style={{ flex: 1 }} onClick={() => navegar('/mapa')}>{passo?.chegou ? 'Voltar ao mapa' : 'Encerrar'}</button>
           {simulando && (
             <button className="btn btn-demo" style={{ flex: 1.4 }}
               onClick={() => (passo.chegou || andado >= total ? recomecar() : setAndando(a => !a))}>

@@ -1,5 +1,6 @@
 // Posição do cliente na planta da feira. Usa o GPS de verdade quando a pessoa está na feira.
-// Longe da feira (o caso de toda demonstração), mostra uma posição simulada na entrada e avisa.
+// Na demonstração, sem GPS dentro da feira, mostra uma posição simulada na entrada e avisa.
+// Em produção não existe posição inventada: sem GPS, o mapa fica sem o marcador do cliente.
 import { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import { useFeira } from './FeiraContext.jsx';
 import { dentroDaFeira, paraLocal } from '../lib/geo.js';
@@ -21,7 +22,7 @@ export function LocalizacaoProvider({ children }) {
 
   useEffect(() => {
     if (!feira) return;
-    const simulada = { pos: { ...planta.entrada }, precisao: 5, simulada: true };
+    const simulada = emDemonstracao ? { pos: { ...planta.entrada }, precisao: 5, simulada: true } : { pos: null, precisao: null };
     if (preferencia !== 'sim') { setEstado({ status: 'desligada', pos: null, precisao: null }); return; }
     if (!('geolocation' in navigator)) { setEstado({ status: 'indisponivel', ...simulada }); return; }
     setEstado(e => (e.pos ? e : { status: 'procurando', pos: null, precisao: null }));
@@ -31,10 +32,7 @@ export function LocalizacaoProvider({ children }) {
         if (dentroDaFeira(planta, local)) setEstado({ status: 'gps', pos: local, precisao: p.coords.accuracy, simulada: false });
         else setEstado({ status: 'fora', ...simulada });
       },
-      // na demonstração, sem permissão ainda mostramos a posição simulada para o fluxo inteiro funcionar
-      err => setEstado(err.code === err.PERMISSION_DENIED
-        ? (emDemonstracao ? { status: 'negada', ...simulada } : { status: 'negada', pos: null, precisao: null })
-        : { status: 'indisponivel', ...simulada }),
+      err => setEstado({ status: err.code === err.PERMISSION_DENIED ? 'negada' : 'indisponivel', ...simulada }),
       { enableHighAccuracy: true, maximumAge: 5000, timeout: 20000 },
     );
     return () => navigator.geolocation.clearWatch(id);

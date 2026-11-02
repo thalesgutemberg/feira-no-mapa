@@ -42,9 +42,9 @@ export function AvisoLocalizacao({ loc }) {
     case 'negada':
       return <Banner tipo="alerta" icone="gpsoff" titulo="Localização bloqueada">Libere a localização para este site nas configurações do navegador para ver onde você está.{loc.pos && ' Para demonstração, mostramos você na entrada.'}</Banner>;
     case 'fora':
-      return <div className="toast"><Icon nome="info" /><span>Você não está na feira agora. Para demonstração, mostramos você na entrada.</span></div>;
+      return <div className="toast"><Icon nome="info" /><span>Você não está na feira agora. {loc.pos ? 'Para demonstração, mostramos você na entrada.' : 'O mapa funciona, mas sem mostrar onde você está.'}</span></div>;
     case 'indisponivel':
-      return <div className="toast"><Icon nome="alert" /><span>Não consegui achar sua posição. Mostrando você na entrada.</span></div>;
+      return <div className="toast"><Icon nome="alert" /><span>Não consegui achar sua posição. {loc.pos ? 'Para demonstração, mostramos você na entrada.' : 'O mapa funciona, mas sem mostrar onde você está.'}</span></div>;
     case 'procurando':
       return <div className="toast"><span className="spinner" style={{ color: 'var(--sun)' }} /><span>Procurando sua localização</span></div>;
     case 'gps':

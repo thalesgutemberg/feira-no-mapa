@@ -25,7 +25,7 @@ Para testar no celular na mesma rede, use o endereço `Network` que o Vite mostr
 1. O organizador encosta o celular na etiqueta da barraca. O app lê o UID do chip (Web NFC).
 2. O UID identifica a barraca (`etiquetas_nfc`).
 3. O app lê o GPS e sugere as vagas livres mais próximas, com a vaga de costume da barraca entre as opções.
-4. O organizador confirma a vaga olhando a placa no chão. O GPS erra de 3 a 10 m, então ele só sugere.
+4. O organizador confirma a vaga olhando a placa no chão. O GPS erra de 3 a 10 m, então ele só sugere. Se a vaga certa não estiver na lista, ou se não houver GPS, ele digita o código da placa.
 5. A RPC `registrar_leitura` grava a presença. O mapa do cliente se atualiza em tempo real.
 
 Barraca sem leitura no dia aparece para o cliente como "não veio hoje", com sugestões de barracas parecidas.
@@ -67,9 +67,9 @@ supabase/
 
 ## Limitações conhecidas
 
-- **NFC só no Chrome do Android.** No iPhone e no computador, a montagem usa o simulador. Se o organizador usar iPhone, vai precisar de app nativo ou de QR code no lugar da etiqueta.
+- **NFC só no Chrome do Android.** No iPhone e no computador, a montagem só funciona na demonstração, com o simulador. Com Supabase, esses aparelhos não leem nem vinculam etiquetas: o organizador com iPhone vai precisar de app nativo ou de QR code no lugar da etiqueta.
 - **A planta considera a feira alinhada ao norte.** Para uma rua inclinada, falta uma rotação em `lib/geo.js`.
 - **A seta da navegação aponta no sentido do mapa.** Ainda não gira com a bússola do celular.
 - **Os ícones são emoji**, que mudam de desenho entre sistemas.
-- **Na demonstração, sem GPS dentro da feira, a posição é simulada** (cliente na entrada, leitura perto da vaga de costume). O app avisa isso na tela.
+- **Só a demonstração simula.** Sem GPS dentro da feira, ela mostra o cliente na entrada e faz a leitura perto da vaga de costume, e avisa na tela. Com Supabase, nada é simulado: o cliente fica sem marcador e sem rota, e o organizador escolhe a vaga pela placa.
 - O SQL foi testado num Postgres embutido (PGlite) com stubs de `auth`. Ainda não rodou num projeto Supabase de verdade, então o tempo real e o login não foram testados de ponta a ponta.

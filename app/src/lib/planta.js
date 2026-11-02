@@ -17,6 +17,14 @@ const RUA = 3.5;          // ruas transversais no topo e na base
 
 const r2 = n => Math.round(n * 100) / 100;
 
+/** Acha a vaga pelo código da placa, aceitando como a pessoa digita: "c5", "C 05" ou "c-05". */
+export function acharVagaPorCodigo(vagas, texto) {
+  const m = texto.trim().toUpperCase().match(/^([A-Z])[\s-]*(\d{1,2})$/);
+  if (!m) return null;
+  const codigo = `${m[1]}-${m[2].padStart(2, '0')}`;
+  return vagas.find(v => v.codigo === codigo) ?? null;
+}
+
 export function gerarPlanta() {
   const corredores = [];
   const fileiras = [];

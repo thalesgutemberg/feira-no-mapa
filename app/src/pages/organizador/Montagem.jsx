@@ -1,21 +1,25 @@
 // Montagem do mapa do dia. Fluxo: encosta o celular na etiqueta -> o app identifica a barraca pelo UID ->
 // lê o GPS e sugere as vagas livres mais próximas -> o organizador confirma a vaga -> a barraca aparece no mapa.
-// O GPS erra de 3 a 10 m, por isso ele só sugere: quem decide a vaga é o organizador, olhando a placa no chão.
+// O GPS erra de 3 a 10 m, por isso ele só sugere: quem decide a vaga é o organizador, olhando a placa no chão,
+// e ele pode digitar o código da placa quando a vaga certa não estiver entre as sugestões.
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import FeiraMap from '../../components/FeiraMap.jsx';
 import Icon from '../../components/Icon.jsx';
 import { Selo } from '../../components/Barraca.jsx';
 import { Banner } from '../../components/Avisos.jsx';
-import { api } from '../../data/api.js';
+import { api, emDemonstracao } from '../../data/api.js';
 import { useFeira } from '../../data/FeiraContext.jsx';
 import { lerGpsUmaVez } from '../../data/LocalizacaoContext.jsx';
 import { centroDaVaga, vagasMaisProximas } from '../../lib/geo.js';
 import { escutarEtiquetas, nfcSuportado, vibrar } from '../../lib/nfc.js';
+import { acharVagaPorCodigo } from '../../lib/planta.js';
 
 const DESCONHECIDA = '04:DE:AD:BE:EF:00:01';
 
 /** Sem GPS dentro da feira (demonstração), simula a leitura perto da vaga de costume, com o erro típico de um celular. */
+const gpsReal = leitura => !!leitura.pos && !leitura.simulada;
+
 function posicaoSimulada(f, barraca) {
   const vaga = f.vagaPorId.get(barraca.vaga_habitual_id) ?? f.vagas[0];
   const c = centroDaVaga(vaga);
@@ -29,9 +33,11 @@ export default function Montagem() {
   const [leitura, setLeitura] = useState(null);
   const [aviso, setAviso] = useState(null);
   const [leitorLigado, setLeitorLigado] = useState(false);
-  const [mostrarSimulador, setMostrarSimulador] = useState(!nfcSuportado);
+  const [mostrarSimulador, setMostrarSimulador] = useState(emDemonstracao && !nfcSuportado);
   const [etiquetas, setEtiquetas] = useState([]);
   const [simUid, setSimUid] = useState('');
+  const [vagaDigitada, setVagaDigitada] = useState('');
+  const [erroVaga, setErroVaga] = useState(null);
   const parar = useRef(null);
   const faseAtual = useRef(fase);
   faseAtual.current = fase;
@@ -52,20 +58,20 @@ export default function Montagem() {
   async function aoLerEtiqueta(uid) {
     if (faseAtual.current !== 'aguardando') return;   // ignora leituras enquanto confirma a anterior
     vibrar();
-    setFase('lendo'); setAviso(null);
+    setFase('lendo'); setAviso(null); setVagaDigitada(''); setErroVaga(null);
     try {
       const barraca = await api.barracaDaEtiqueta(uid);
       if (!barraca) { setAviso({ tipo: 'erro', texto: `Etiqueta ${uid} não está ligada a nenhuma barraca. Vincule na tela de Barracas.` }); setFase('aguardando'); return; }
       const gps = await lerGpsUmaVez(f.feira, f.planta, 6000);
-      const pos = gps ?? posicaoSimulada(f, barraca);
+      const pos = gps ?? (emDemonstracao ? posicaoSimulada(f, barraca) : null);
       const ocupadas = new Set(f.presencas.filter(p => p.barraca_id !== barraca.id).map(p => p.vaga_id));
-      const opcoes = vagasMaisProximas(pos, f.vagas, ocupadas, 4);
+      const opcoes = pos ? vagasMaisProximas(pos, f.vagas, ocupadas, 4) : [];
       const habitual = f.vagaPorId.get(barraca.vaga_habitual_id);
       if (habitual && !ocupadas.has(habitual.id) && !opcoes.some(o => o.vaga.id === habitual.id)) {
-        opcoes.push({ vaga: habitual, metros: Math.hypot(centroDaVaga(habitual).x - pos.x, centroDaVaga(habitual).y - pos.y), deCostume: true });
+        opcoes.push({ vaga: habitual, metros: pos ? Math.hypot(centroDaVaga(habitual).x - pos.x, centroDaVaga(habitual).y - pos.y) : null, deCostume: true });
       }
       opcoes.forEach(o => { if (o.vaga.id === habitual?.id) o.deCostume = true; });
-      setLeitura({ uid, barraca, pos, simulada: !gps, opcoes, escolhida: opcoes[0]?.vaga.id, anterior: f.vagaDa(barraca), chave: Date.now() });
+      setLeitura({ uid, barraca, pos, simulada: !gps && emDemonstracao, opcoes, escolhida: opcoes[0]?.vaga.id, anterior: f.vagaDa(barraca), chave: Date.now() });
       setFase('confirmar');
     } catch (e) {
       setAviso({ tipo: 'erro', texto: e.message }); setFase('aguardando');
@@ -84,11 +90,11 @@ export default function Montagem() {
   }
 
   async function confirmar() {
-    const { uid, barraca, pos, simulada, escolhida } = leitura;
+    const { uid, barraca, pos, escolhida } = leitura;
     const vaga = f.vagaPorId.get(escolhida);
     setFase('salvando');
     try {
-      await api.registrarLeitura({ uid, vagaId: escolhida, lat: simulada ? null : pos.lat, lng: simulada ? null : pos.lng, precisao: Math.round(pos.precisao) });
+      await api.registrarLeitura({ uid, vagaId: escolhida, lat: gpsReal(leitura) ? pos.lat : null, lng: gpsReal(leitura) ? pos.lng : null, precisao: gpsReal(leitura) ? Math.round(pos.precisao) : null });
       vibrar(40);
       setAviso({ tipo: 'sucesso', texto: `Barraca ${barraca.numero} - ${barraca.nome} registrada na vaga ${vaga.codigo}.`, barracaId: barraca.id });
       setLeitura(null); setFase('aguardando');
@@ -101,6 +107,20 @@ export default function Montagem() {
       }
       setAviso({ tipo: 'erro', texto: e.message }); setFase('confirmar');
     }
+  }
+
+  // O organizador digita o código da placa quando a vaga certa não está entre as sugestões.
+  function usarVagaDigitada(e) {
+    e.preventDefault();
+    if (!vagaDigitada.trim()) return;
+    const vaga = acharVagaPorCodigo(f.vagas, vagaDigitada);
+    if (!vaga) { setErroVaga(`Não existe a vaga "${vagaDigitada.trim()}" nesta feira. Confira a placa.`); return; }
+    const ocupante = f.ocupacao.get(vaga.id);
+    if (ocupante && ocupante.id !== leitura.barraca.id) { setErroVaga(`A vaga ${vaga.codigo} já tem a barraca ${ocupante.numero} - ${ocupante.nome}.`); return; }
+    const { pos, opcoes } = leitura;
+    const metros = pos ? Math.hypot(centroDaVaga(vaga).x - pos.x, centroDaVaga(vaga).y - pos.y) : null;
+    setLeitura({ ...leitura, opcoes: opcoes.some(o => o.vaga.id === vaga.id) ? opcoes : [...opcoes, { vaga, metros, digitada: true }], escolhida: vaga.id, chave: Date.now() });
+    setVagaDigitada(''); setErroVaga(null);
   }
 
   async function desfazer(barracaId) {
@@ -129,13 +149,20 @@ export default function Montagem() {
 
         {(fase === 'aguardando' || fase === 'lendo') && (
           <>
-            <div className={`nfc-anel${leitorLigado || mostrarSimulador ? ' ativo' : ''}`}>
-              {fase === 'lendo' ? <span className="spinner" style={{ width: 48, height: 48, borderWidth: 5 }} /> : <Icon nome="nfc" />}
-            </div>
-            <div style={{ textAlign: 'center' }}>
-              <h1 className="t-title">{fase === 'lendo' ? 'Lendo etiqueta e GPS' : 'Encoste o celular na etiqueta'}</h1>
-              <p className="t-caption" style={{ margin: '6px 0 0' }}>A etiqueta fica na frente da barraca, embaixo do número.</p>
-            </div>
+            {!nfcSuportado && !emDemonstracao && (
+              <Banner tipo="erro" icone="alert" titulo="Este aparelho não lê NFC">A montagem só funciona no Chrome do Android. Abra esta página nele para ler as etiquetas.</Banner>
+            )}
+            {(nfcSuportado || emDemonstracao) && (
+              <>
+                <div className={`nfc-anel${leitorLigado || mostrarSimulador ? ' ativo' : ''}`}>
+                  {fase === 'lendo' ? <span className="spinner" style={{ width: 48, height: 48, borderWidth: 5 }} /> : <Icon nome="nfc" />}
+                </div>
+                <div style={{ textAlign: 'center' }}>
+                  <h1 className="t-title">{fase === 'lendo' ? 'Lendo etiqueta e GPS' : 'Encoste o celular na etiqueta'}</h1>
+                  <p className="t-caption" style={{ margin: '6px 0 0' }}>A etiqueta fica na frente da barraca, embaixo do número.</p>
+                </div>
+              </>
+            )}
             {nfcSuportado && !leitorLigado && <button className="btn btn-primary btn-block" onClick={ligarLeitor}><Icon nome="nfc" />Ligar leitor NFC</button>}
             {nfcSuportado && leitorLigado && <p className="t-caption" style={{ textAlign: 'center', margin: 0 }}>Leitor ligado. Pode encostar uma etiqueta atrás da outra.</p>}
 
@@ -151,7 +178,7 @@ export default function Montagem() {
                 </select>
                 <button className="btn btn-demo btn-block" disabled={fase !== 'aguardando'} onClick={() => aoLerEtiqueta(simUid)}><Icon nome="nfc" />Encostar etiqueta</button>
               </div>
-            ) : (
+            ) : emDemonstracao && (
               <button className="btn btn-ghost btn-sm" onClick={() => setMostrarSimulador(true)}>Testar sem etiqueta (simulador)</button>
             )}
 
@@ -177,29 +204,39 @@ export default function Montagem() {
             </div>
             {leitura.simulada
               ? <Banner tipo="info" icone="info" titulo="Posição simulada">Sem GPS dentro da feira, simulei a leitura perto da vaga de costume, com o erro típico de um celular.</Banner>
-              : <Banner tipo={leitura.pos.precisao > 12 ? 'alerta' : 'info'} icone="locate" titulo={`GPS com precisão de ${Math.round(leitura.pos.precisao)} m`}>
-                  {leitura.pos.precisao > 12 ? 'Sinal fraco: confira a vaga pela placa no chão.' : 'Confira a vaga pela placa no chão antes de confirmar.'}
-                </Banner>}
+              : leitura.pos
+                ? <Banner tipo={leitura.pos.precisao > 12 ? 'alerta' : 'info'} icone="locate" titulo={`GPS com precisão de ${Math.round(leitura.pos.precisao)} m`}>
+                    {leitura.pos.precisao > 12 ? 'Sinal fraco: confira a vaga pela placa no chão.' : 'Confira a vaga pela placa no chão antes de confirmar.'}
+                  </Banner>
+                : <Banner tipo="alerta" icone="gpsoff" titulo="Sem GPS nesta leitura">Não há sugestão por posição. Confira a placa no chão e digite o código da vaga, se ela não estiver na lista.</Banner>}
             {leitura.anterior && <Banner tipo="alerta" icone="info">Esta barraca já está no mapa de hoje, na vaga {leitura.anterior.codigo}. Confirmar muda para a vaga escolhida abaixo.</Banner>}
 
             <div className="mini-mapa">
-              <FeiraMap planta={f.planta} vagas={f.vagas} ocupacao={f.ocupacao} usuario={leitura.pos} precisao={leitura.pos.precisao}
+              <FeiraMap planta={f.planta} vagas={f.vagas} ocupacao={f.ocupacao} usuario={leitura.pos} precisao={leitura.pos?.precisao}
                 vagaMarcada={leitura.escolhida} vagasOpcao={new Set(leitura.opcoes.map(o => o.vaga.id))}
-                enquadrar={[leitura.pos, ...leitura.opcoes.map(o => centroDaVaga(o.vaga))]} chaveCamera={leitura.chave} />
+                enquadrar={[...(leitura.pos ? [leitura.pos] : []), ...leitura.opcoes.map(o => centroDaVaga(o.vaga))]} zoom="longe" chaveCamera={leitura.chave} />
             </div>
 
             <div className="list-title">Em qual vaga ela está?</div>
             {leitura.opcoes.length === 0
-              ? <Banner tipo="erro" icone="alert">Não há vaga livre perto desta posição.</Banner>
+              ? <Banner tipo="alerta" icone="alert">Nenhuma vaga sugerida. Digite o código da placa abaixo.</Banner>
               : (
                 <div className="vaga-opcoes">
                   {leitura.opcoes.map(o => (
                     <button key={o.vaga.id} className="vaga-opcao" aria-pressed={o.vaga.id === leitura.escolhida} onClick={() => setLeitura({ ...leitura, escolhida: o.vaga.id })}>
-                      {o.vaga.codigo}<small>{o.deCostume ? 'de costume · ' : ''}a {Math.round(o.metros)} m</small>
+                      {o.vaga.codigo}<small>{[o.deCostume && 'de costume', o.digitada && 'digitada', o.metros != null && `a ${Math.round(o.metros)} m`].filter(Boolean).join(' · ')}</small>
                     </button>
                   ))}
                 </div>
               )}
+            <form className="campo" onSubmit={usarVagaDigitada}>
+              <label htmlFor="vaga-digitada">A vaga não está na lista? Digite o código da placa</label>
+              <div className="row">
+                <input id="vaga-digitada" className={`input${erroVaga ? ' is-error' : ''}`} placeholder="Ex: C-05" autoComplete="off" autoCapitalize="characters" value={vagaDigitada} onChange={e => { setVagaDigitada(e.target.value); setErroVaga(null); }} />
+                <button className="btn btn-secondary" type="submit" disabled={fase === 'salvando'}>Usar</button>
+              </div>
+              {erroVaga && <p className="msg-campo erro" role="alert"><Icon nome="alert" style={{ width: 18, height: 18 }} />{erroVaga}</p>}
+            </form>
             <button className="btn btn-primary btn-block" disabled={!vagaEscolhida || fase === 'salvando'} onClick={confirmar}>
               {fase === 'salvando' ? <><span className="spinner" />Registrando</> : <><Icon nome="check" />Confirmar vaga {vagaEscolhida?.codigo}</>}
             </button>

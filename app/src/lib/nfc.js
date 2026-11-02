@@ -1,5 +1,5 @@
 // Leitura de etiquetas NFC pelo navegador (Web NFC). Hoje só existe no Chrome do Android,
-// em página HTTPS ou localhost. Fora disso, as telas usam o simulador.
+// em página HTTPS ou localhost. Fora disso, só a demonstração tem simulador; em produção a leitura fica indisponível.
 
 export const nfcSuportado = typeof window !== 'undefined' && 'NDEFReader' in window;
 
