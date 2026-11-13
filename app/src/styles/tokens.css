@@ -1,4 +1,4 @@
-/* Tokens do design system do protótipo. Tema só claro: o uso principal é sob sol forte. */
+/* Tokens do design system do protótipo. Tema só claro, pensado para sol forte; um tema noturno ainda não existe. */
 :root {
   --bg: #FFFBF2; --surface: #FFFFFF; --surface-2: #F5EFE2;
   --ink: #1C1A16; --ink-2: #4A4539; --ink-3: #6B6352;
@@ -12,13 +12,13 @@
   --warning: #8A5A00; --warning-tint: #FFF4D6;
   --error: #B42318; --error-tint: #FDE7E4;
 
-  --cat-hortifruti: #2E7D32; --cat-hortifruti-t: #E3F1E3;
   --cat-comida: #C2410C;     --cat-comida-t: #FBE6DA;
-  --cat-carnes: #9F1239;     --cat-carnes-t: #F7DDE4;
+  --cat-bebidas: #0E7490;    --cat-bebidas-t: #DDF0F4;
+  --cat-doces: #BE185D;      --cat-doces-t: #FADFEA;
   --cat-artesanato: #6D28D9; --cat-artesanato-t: #ECE4FB;
   --cat-outros: #475569;     --cat-outros-t: #E5E9EF;
 
-  --mapa-chao: #E9E1CF; --mapa-rua: #FBF7EE;
+  --mapa-chao: #E9E1CF; --mapa-rua: #FBF7EE; --mapa-praca: #DDE6CC; --mapa-arvore: #5E9A52;
 
   --font: 'Atkinson Hyperlegible', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --emoji: 'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji', sans-serif;

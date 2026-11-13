@@ -4,7 +4,7 @@ Mapa digital para feiras de rua. O cliente escaneia um QR code na entrada, vê t
 
 > **Status:** este repositório tem duas partes.
 > - **Protótipo** (`index.html`, publicado no GitHub Pages): design system e telas, com dados fictícios.
-> - **MVP** (pasta [`app/`](app/)): React + Supabase, com 100 barracas fictícias e montagem do mapa por NFC. Veja o [README do app](app/README.md).
+> - **MVP** (pasta [`app/`](app/)): React + Supabase, com uma feira noturna fictícia de 80 barracas, cardápios e montagem do mapa por NFC. Veja o [README do app](app/README.md).
 
 ## Como abrir
 

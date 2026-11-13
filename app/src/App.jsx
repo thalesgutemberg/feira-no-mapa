@@ -1,4 +1,4 @@
-import { HashRouter, Navigate, Route, Routes } from 'react-router-dom';
+import { HashRouter, Navigate, Outlet, Route, Routes } from 'react-router-dom';
 import { IconSprite } from './components/Icon.jsx';
 import { Carregando, TelaErro } from './components/Avisos.jsx';
 import { FeiraProvider, useFeira } from './data/FeiraContext.jsx';
@@ -14,6 +14,9 @@ import Montagem from './pages/organizador/Montagem.jsx';
 import ListaBarracas from './pages/organizador/ListaBarracas.jsx';
 import EditarBarraca from './pages/organizador/EditarBarraca.jsx';
 
+// Telas do cliente: tema noturno (styles/noite.css). O organizador fica fora, com o tema claro.
+const Noite = () => <div className="noite"><Outlet /></div>;
+
 function Rotas() {
   const f = useFeira();
   if (f.carregando) return <Carregando />;
@@ -21,11 +24,13 @@ function Rotas() {
   return (
     <LocalizacaoProvider>
       <Routes>
-        <Route path="/" element={<Entrada />} />
-        <Route path="/mapa" element={<Mapa />} />
-        <Route path="/busca" element={<Busca />} />
-        <Route path="/barraca/:numero" element={<DetalheBarraca />} />
-        <Route path="/ir/:numero" element={<Navegacao />} />
+        <Route element={<Noite />}>
+          <Route path="/" element={<Entrada />} />
+          <Route path="/mapa" element={<Mapa />} />
+          <Route path="/busca" element={<Busca />} />
+          <Route path="/barraca/:numero" element={<DetalheBarraca />} />
+          <Route path="/ir/:numero" element={<Navegacao />} />
+        </Route>
         <Route path="/organizador" element={<AreaOrganizador />}>
           <Route index element={<Painel />} />
           <Route path="montagem" element={<Montagem />} />

@@ -6,7 +6,7 @@ import { ErroFeira } from './erros.js';
 import { hojeEmSaoPaulo } from '../lib/categorias.js';
 import { normalizarUid } from '../lib/nfc.js';
 
-const CHAVE = 'feira-no-mapa:demo:v1';
+const CHAVE = 'feira-no-mapa:demo:v3';
 const ouvintes = new Set();
 const espera = (ms = 120) => new Promise(r => setTimeout(r, ms));
 let db = null;

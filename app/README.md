@@ -1,6 +1,6 @@
 # Feira no Mapa: MVP
 
-React (JavaScript) + Vite + Supabase. Mapa de uma feira com 100 barracas, onde **cada barraca só aparece no mapa do dia depois que a etiqueta NFC dela é lida** na montagem.
+React (JavaScript) + Vite + Supabase. Mapa de uma feira noturna de praça com 80 barracas fictícias, com cardápio e preços por barraca, onde **cada barraca só aparece no mapa do dia depois que a etiqueta NFC dela é lida** na montagem.
 
 ## Rodar
 
@@ -17,7 +17,7 @@ Para testar no celular na mesma rede, use o endereço `Network` que o Vite mostr
 
 | Quem | O quê |
 |---|---|
-| Cliente | Mapa com as barracas lidas hoje, busca por produto, detalhe da barraca e navegação pelos corredores |
+| Cliente | Mapa com as barracas lidas hoje, busca por produto ou item do cardápio, detalhe da barraca com cardápio e preços, e navegação pelos corredores |
 | Organizador | Montagem do mapa por NFC, cadastro das barracas e vínculo de etiquetas |
 
 **A montagem, passo a passo:**
@@ -30,16 +30,16 @@ Para testar no celular na mesma rede, use o endereço `Network` que o Vite mostr
 
 Barraca sem leitura no dia aparece para o cliente como "não veio hoje", com sugestões de barracas parecidas.
 
-**A planta:** a feira tem vagas demarcadas (fileiras A a F, três corredores), guardadas em metros na tabela `vagas`. O mapa é desenhado a partir delas, não do GPS. GPS e planta se conectam por um ponto de origem (`feiras.origem_lat/lng`).
+**A planta:** no topo fica a praça, com palco e mesas. Abaixo dela, a feira tem vagas demarcadas (fileiras A a F, três corredores), guardadas em metros na tabela `vagas`. O mapa é desenhado a partir delas, não do GPS. GPS e planta se conectam por um ponto de origem (`feiras.origem_lat/lng`).
 
 ## Ligar o Supabase
 
 1. Crie um projeto em [supabase.com](https://supabase.com).
-2. No SQL Editor, rode `supabase/migrations/0001_schema.sql` e depois `supabase/seed.sql`.
+2. No SQL Editor, rode `supabase/migrations/0001_schema.sql`, `supabase/migrations/0002_feira_noturna.sql` e depois `supabase/seed.sql`.
 3. Em Authentication > Users, crie o usuário do organizador. Depois dê a ele acesso à feira:
    ```sql
    insert into organizadores (user_id, feira_id)
-   select id, (select id from feiras where slug = 'praca-central') from auth.users where email = 'seu-email@exemplo.com';
+   select id, (select id from feiras where slug = 'feira-luar') from auth.users where email = 'seu-email@exemplo.com';
    ```
 4. Copie `.env.example` para `.env` e preencha `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY` (Project Settings > API).
 5. `npm run dev` de novo. A faixa "Demonstração" some e a área do organizador passa a pedir login.
@@ -57,7 +57,7 @@ Para regenerar o seed depois de mudar `src/data/mock.js`: `npm run seed:sql`.
 ```
 src/
   lib/          planta, geo (GPS <-> metros), rota pelos corredores, NFC, busca
-  data/         mock.js (100 barracas), mockAdapter, supabaseAdapter, contextos
+  data/         mock.js (80 barracas com cardápio), mockAdapter, supabaseAdapter, contextos
   components/   FeiraMap (SVG com zoom e arraste), BottomSheet, cards, avisos
   pages/        telas do cliente e do organizador
 supabase/
@@ -70,6 +70,8 @@ supabase/
 - **NFC só no Chrome do Android.** No iPhone e no computador, a montagem só funciona na demonstração, com o simulador. Com Supabase, esses aparelhos não leem nem vinculam etiquetas: o organizador com iPhone vai precisar de app nativo ou de QR code no lugar da etiqueta.
 - **A planta considera a feira alinhada ao norte.** Para uma rua inclinada, falta uma rotação em `lib/geo.js`.
 - **A seta da navegação aponta no sentido do mapa.** Ainda não gira com a bússola do celular.
+- **O cardápio ainda não tem tela de edição.** Ele vem dos dados fictícios (`mock.js`) ou direto do banco (`barracas.cardapio`).
+- **O tema é só claro.** Para uma feira noturna, falta um tema escuro.
 - **Os ícones são emoji**, que mudam de desenho entre sistemas.
 - **Só a demonstração simula.** Sem GPS dentro da feira, ela mostra o cliente na entrada e faz a leitura perto da vaga de costume, e avisa na tela. Com Supabase, nada é simulado: o cliente fica sem marcador e sem rota, e o organizador escolhe a vaga pela placa.
-- O SQL foi testado num Postgres embutido (PGlite) com stubs de `auth`. Ainda não rodou num projeto Supabase de verdade, então o tempo real e o login não foram testados de ponta a ponta.
+- O SQL de `0001_schema.sql` foi testado num Postgres embutido (PGlite) com stubs de `auth`. A migração `0002_feira_noturna.sql` e o seed novo ainda não foram executados em nenhum banco. Ainda não rodou num projeto Supabase de verdade, então o tempo real e o login não foram testados de ponta a ponta.

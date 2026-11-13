@@ -1,5 +1,6 @@
 import Icon from './Icon.jsx';
-import { CATEGORIAS, PAGAMENTOS, corDa, tomDa, normalizar } from '../lib/categorias.js';
+import { fundoDa } from '../lib/fotos.js';
+import { CATEGORIAS, PAGAMENTOS, corDa, tomDa, normalizar, itemDoCardapio, preco } from '../lib/categorias.js';
 
 /** Ícone do produto com o número da placa: o mesmo par que aparece desenhado no mapa. */
 export function Selo({ barraca, ausente = false, tamanho }) {
@@ -15,13 +16,19 @@ function destacar(texto, termo) {
   return <>{texto.slice(0, i)}<mark>{texto.slice(i, i + termo.length)}</mark>{texto.slice(i + termo.length)}</>;
 }
 
-export function CardBarraca({ barraca, vaga, metros, ausente, termo, onClick }) {
+/** Com `foto`, o card mostra a foto da barraca no lugar do selo de emoji (telas do cliente). */
+export function CardBarraca({ barraca, vaga, metros, ausente, termo, foto = false, onClick }) {
+  const item = termo ? itemDoCardapio(barraca, termo) : null;
   return (
     <button className={`card-barraca${ausente ? ' ausente' : ''}`} onClick={onClick}>
-      <Selo barraca={barraca} ausente={ausente} />
+      {foto
+        ? <span className="thumb" style={fundoDa(barraca)}><small>{barraca.numero}</small></span>
+        : <Selo barraca={barraca} ausente={ausente} />}
       <span>
         <span className="nome">{destacar(barraca.nome, termo)}</span><br />
-        <span className="sub">{CATEGORIAS[barraca.categoria].nome}{vaga ? ` · Corredor ${vaga.corredor}` : ''}</span>
+        <span className="sub">{item
+          ? <>{destacar(item.nome, termo)} · {preco(item.preco)}</>
+          : <>{CATEGORIAS[barraca.categoria].nome}{vaga ? ` · Corredor ${vaga.corredor}` : ''}</>}</span>
       </span>
       <span className="dist">{ausente ? 'Não veio' : metros != null ? `${Math.round(metros)} m` : ''}</span>
     </button>
@@ -36,6 +43,21 @@ export function Pagamentos({ barraca }) {
           <Icon nome={p.icone} />{p.nome}
         </span>
       ))}
+    </div>
+  );
+}
+
+const TITULO_CARDAPIO = { comida: 'Cardápio', bebidas: 'Cardápio', doces: 'Cardápio' };
+
+/** Itens e preços da barraca. Em barraca que não vende comida, a lista se chama "Produtos e preços". */
+export function Cardapio({ barraca }) {
+  if (!barraca.cardapio?.length) return null;
+  return (
+    <div>
+      <div className="list-title">{TITULO_CARDAPIO[barraca.categoria] ?? 'Produtos e preços'}</div>
+      <ul className="cardapio">
+        {barraca.cardapio.map(i => <li key={i.nome}><span>{i.nome}</span><span className="valor">{preco(i.preco)}</span></li>)}
+      </ul>
     </div>
   );
 }

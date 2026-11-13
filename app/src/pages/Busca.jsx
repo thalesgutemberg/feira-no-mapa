@@ -8,7 +8,7 @@ import { useLocalizacao } from '../data/LocalizacaoContext.jsx';
 import { buscarBarracas } from '../lib/categorias.js';
 import { metrosAte } from '../lib/rota.js';
 
-const SUGESTOES = ['pastel', 'orgânicos', 'queijo', 'caldo de cana', 'peixe', 'pix'];
+const SUGESTOES = ['hambúrguer', 'cerveja artesanal', 'pizza', 'açaí', 'vegano', 'pix'];
 
 export default function Busca() {
   const f = useFeira();
@@ -59,7 +59,7 @@ export default function Busca() {
           <div className="list-title">{presentes.length} {presentes.length === 1 ? 'barraca hoje' : 'barracas hoje'}{loc.pos ? ' · mais perto primeiro' : ''}</div>
         )}
         {resultados.map(({ b, v, m }) => (
-          <CardBarraca key={b.id} barraca={b} vaga={v} metros={m} ausente={!v} termo={termo.trim()} onClick={() => navegar(`/barraca/${b.numero}`)} />
+          <CardBarraca key={b.id} foto barraca={b} vaga={v} metros={m} ausente={!v} termo={termo.trim()} onClick={() => navegar(`/barraca/${b.numero}`)} />
         ))}
       </div>
     </div>

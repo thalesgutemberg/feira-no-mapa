@@ -36,7 +36,7 @@ function TileBarraca({ vaga, barraca, estado, nomes, onClick }) {
   const ty = y + 1.75 - (linhas.length - 1) * 0.31 + 0.2;
   return (
     <g className="barraca" opacity={estado === 'apagada' ? 0.22 : 1} onClick={onClick} role="button" aria-label={`${barraca.numero} ${barraca.nome}`}>
-      <rect x={x} y={y} width={w} height={h} rx={0.25} style={{ fill: estado === 'selecionada' ? tomDa(barraca.categoria) : '#fff' }} />
+      <rect x={x} y={y} width={w} height={h} rx={0.25} style={{ fill: estado === 'selecionada' ? tomDa(barraca.categoria) : 'var(--mapa-tile, #fff)' }} />
       {listras}
       {nomes ? (
         <>
@@ -45,7 +45,7 @@ function TileBarraca({ vaga, barraca, estado, nomes, onClick }) {
             {linhas.map((l, i) => <tspan key={i} x={x + 1.55} dy={i ? 0.62 : 0}>{l}</tspan>)}
           </text>
           <rect x={x + w - 1.15} y={y + 0.05} width={1.1} height={0.62} rx={0.15} style={{ fill: 'var(--ink)' }} />
-          <text x={x + w - 0.6} y={y + 0.52} fontSize={0.46} textAnchor="middle" fill="#fff">{barraca.numero}</text>
+          <text x={x + w - 0.6} y={y + 0.52} fontSize={0.46} textAnchor="middle" style={{ fill: 'var(--on-ink, #fff)' }}>{barraca.numero}</text>
         </>
       ) : (
         <>
@@ -63,8 +63,7 @@ function VagaLivre({ vaga, nomes, marcada, opcao }) {
   return (
     <g>
       <rect x={x + 0.08} y={y + 0.08} width={w - 0.16} height={h - 0.16} rx={0.25}
-        fill={marcada ? 'var(--sun-tint)' : 'rgba(255,255,255,.35)'}
-        style={{ stroke: marcada ? 'var(--ink)' : opcao ? 'var(--info)' : '#B5AB96' }}
+        style={{ fill: marcada ? 'var(--sun-tint)' : 'var(--mapa-vaga, rgba(255,255,255,.35))', stroke: marcada ? 'var(--ink)' : opcao ? 'var(--info)' : 'var(--mapa-vaga-linha, #B5AB96)' }}
         strokeWidth={marcada ? 0.22 : opcao ? 0.14 : 0.07} strokeDasharray={marcada ? 'none' : '0.3 0.2'} />
       {(nomes || marcada) && <text x={x + w / 2} y={y + h / 2 + 0.2} fontSize={0.55} textAnchor="middle" style={{ fill: marcada ? 'var(--ink)' : 'var(--ink-3)' }}>{vaga.codigo}</text>}
     </g>
@@ -77,6 +76,35 @@ function Pin({ vaga, barraca }) {
     <g pointerEvents="none">
       <path d={`M${px} ${py} l-0.62 -0.88 a0.88 0.88 0 1 1 1.24 0 z`} style={{ fill: corDa(barraca.categoria) }} stroke="#fff" strokeWidth={0.15} />
       <circle cx={px} cy={py - 1.5} r={0.3} fill="#fff" />
+    </g>
+  );
+}
+
+// Áreas da praça que não são barracas: o palco e o espaço de mesas.
+function Area({ area }) {
+  const { x, y, larg: w, alt: h } = area;
+  if (area.tipo === 'palco') {
+    return (
+      <g pointerEvents="none">
+        <rect x={x} y={y} width={w} height={h} rx={0.5} style={{ fill: 'var(--mapa-palco, var(--ink))' }} />
+        <text x={x + w / 2 - 1.9} y={y + h / 2 + 0.45} fontSize={1.2} textAnchor="middle" className="emo">🎤</text>
+        <text x={x + w / 2 + 0.9} y={y + h / 2 + 0.36} fontSize={1} textAnchor="middle" style={{ fill: 'var(--on-ink, #fff)' }}>{area.nome}</text>
+      </g>
+    );
+  }
+  const mesas = [];
+  const colunas = Math.floor(w / 3), linhas = Math.max(1, Math.floor(h / 2.6));
+  for (let l = 0; l < linhas; l++) {
+    for (let c = 0; c < colunas; c++) {
+      if (linhas === 2 && colunas % 2 === 1 && c === (colunas - 1) / 2) continue;   // vão no meio para o nome da área
+      mesas.push(<circle key={`${l}-${c}`} cx={x + (c + 0.5) * (w / colunas)} cy={y + (l + 0.5) * (h / linhas)} r={0.75} style={{ fill: 'var(--mapa-tile, #fff)', stroke: 'var(--line-strong)' }} strokeWidth={0.08} />);
+    }
+  }
+  return (
+    <g pointerEvents="none">
+      <rect x={x} y={y} width={w} height={h} rx={0.6} style={{ fill: 'var(--mapa-rua)', stroke: 'var(--line)' }} strokeWidth={0.08} />
+      {mesas}
+      <text x={x + w / 2} y={y + h / 2 + 0.28} fontSize={0.8} textAnchor="middle" style={{ fill: 'var(--ink-2)' }}>{area.nome}</text>
     </g>
   );
 }
@@ -195,6 +223,7 @@ export default function FeiraMap({
   };
   const vagaSelecionada = selecionada ? vagas.find(v => ocupacao.get(v.id)?.id === selecionada) : null;
   const largos = planta.largura + 40;
+  const meioFileiras = (planta.ruaTopo.y1 + planta.ruaBase.y0) / 2;
 
   return (
     <>
@@ -205,19 +234,27 @@ export default function FeiraMap({
         role="img" aria-label="Mapa da feira"
       >
         <rect x={-20} y={-20} width={largos} height={planta.altura + 40} style={{ fill: 'var(--mapa-chao)' }} />
+        {planta.praca && <rect x={-20} y={planta.praca.y0 - 20} width={largos} height={planta.praca.y1 - planta.praca.y0 + 20} style={{ fill: 'var(--mapa-praca)' }} />}
         <rect x={-20} y={planta.ruaTopo.y0} width={largos} height={planta.ruaTopo.y1 - planta.ruaTopo.y0} style={{ fill: 'var(--mapa-rua)' }} />
         <rect x={-20} y={planta.ruaBase.y0} width={largos} height={planta.ruaBase.y1 - planta.ruaBase.y0 + 20} style={{ fill: 'var(--mapa-rua)' }} />
         {planta.corredores.map(c => (
           <g key={c.numero}>
-            <rect x={c.x0} y={0} width={c.x1 - c.x0} height={planta.altura} style={{ fill: 'var(--mapa-rua)' }} />
-            <text x={c.cx} y={planta.altura / 2} fontSize={0.8} textAnchor="middle" transform={`rotate(-90 ${c.cx} ${planta.altura / 2})`} style={{ fill: 'var(--ink-3)' }}>Corredor {c.numero}</text>
+            <rect x={c.x0} y={planta.ruaTopo.y0} width={c.x1 - c.x0} height={planta.altura - planta.ruaTopo.y0} style={{ fill: 'var(--mapa-rua)' }} />
+            <text x={c.cx} y={meioFileiras} fontSize={0.8} textAnchor="middle" transform={`rotate(-90 ${c.cx} ${meioFileiras})`} style={{ fill: 'var(--ink-3)' }}>Corredor {c.numero}</text>
           </g>
         ))}
+        {planta.arvores?.map((a, i) => (
+          <g key={i} pointerEvents="none">
+            <circle cx={a.x} cy={a.y} r={1.5} style={{ fill: 'var(--mapa-arvore)' }} opacity={0.55} />
+            <circle cx={a.x} cy={a.y} r={0.9} style={{ fill: 'var(--mapa-arvore)' }} />
+          </g>
+        ))}
+        {planta.areas?.map(a => <Area key={a.nome} area={a} />)}
         {planta.pontos.map(p => {
-          const w = 2 + p.nome.length * 0.42, cy = planta.ruaTopo.cy;
+          const w = 2 + p.nome.length * 0.42, cy = p.y ?? planta.ruaTopo.cy;
           return (
             <g key={p.nome}>
-              <rect x={p.x} y={cy - 0.95} width={w} height={1.9} rx={0.95} fill="#fff" style={{ stroke: 'var(--line-strong)' }} strokeWidth={0.08} />
+              <rect x={p.x} y={cy - 0.95} width={w} height={1.9} rx={0.95} style={{ fill: 'var(--mapa-tile, #fff)', stroke: 'var(--line-strong)' }} strokeWidth={0.08} />
               <text x={p.x + 0.95} y={cy + 0.38} fontSize={1.05} textAnchor="middle" className="emo">{p.icone}</text>
               <text x={p.x + 1.75} y={cy + 0.27} fontSize={0.72} style={{ fill: 'var(--ink)' }}>{p.nome}</text>
             </g>
@@ -225,7 +262,7 @@ export default function FeiraMap({
         })}
         <g>
           <rect x={planta.entrada.x + 1.1} y={planta.entrada.y - 0.8} width={4.8} height={1.6} rx={0.8} style={{ fill: 'var(--ink)' }} />
-          <text x={planta.entrada.x + 3.5} y={planta.entrada.y + 0.26} fontSize={0.72} textAnchor="middle" fill="#fff">ENTRADA</text>
+          <text x={planta.entrada.x + 3.5} y={planta.entrada.y + 0.26} fontSize={0.72} textAnchor="middle" style={{ fill: 'var(--on-ink, #fff)' }}>ENTRADA</text>
         </g>
 
         {rota?.length > 1 && (() => {

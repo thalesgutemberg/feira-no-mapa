@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import FeiraMap from '../components/FeiraMap.jsx';
 import BottomSheet from '../components/BottomSheet.jsx';
 import Icon from '../components/Icon.jsx';
@@ -13,7 +13,7 @@ import { metrosAte } from '../lib/rota.js';
 // Filtros esmaecem o que não combina, sem esconder: o cliente continua se orientando pelo mapa todo.
 const FILTROS = [
   { nome: 'Todas' },
-  ...Object.entries(CATEGORIAS).map(([k, c]) => ({ nome: c.nome, cor: corDa(k), fn: b => b.categoria === k })),
+  ...Object.entries(CATEGORIAS).map(([k, c]) => ({ chave: k, nome: c.nome, cor: corDa(k), fn: b => b.categoria === k })),
   { nome: 'Aceita Pix', icone: 'pix', fn: b => b.pagamentos.includes('pix') },
 ];
 const ALTURA_SHEET = 128;
@@ -22,7 +22,9 @@ export default function Mapa() {
   const f = useFeira();
   const loc = useLocalizacao();
   const navegar = useNavigate();
-  const [filtro, setFiltro] = useState(0);
+  // a entrada abre o mapa já filtrado por categoria: /mapa?cat=comida
+  const [params] = useSearchParams();
+  const [filtro, setFiltro] = useState(() => Math.max(0, FILTROS.findIndex(x => x.chave && x.chave === params.get('cat'))));
   const fn = FILTROS[filtro].fn;
 
   const lista = useMemo(() => f.presentes
@@ -34,6 +36,7 @@ export default function Mapa() {
     <div className="tela">
       <div className="topbar">
         <div className="row">
+          <button className="icon-btn" aria-label="Voltar ao início" onClick={() => navegar('/')}><Icon nome="back" /></button>
           <button className="search" onClick={() => navegar('/busca')}><Icon nome="search" /><span className="placeholder">Buscar barraca ou produto</span></button>
         </div>
         <div className="chips">
@@ -60,7 +63,7 @@ export default function Mapa() {
         </div>
         <div className="list-title">{loc.pos ? 'Perto de você' : 'Barracas'}</div>
         {lista.slice(0, 30).map(({ b, v, m }) => (
-          <CardBarraca key={b.id} barraca={b} vaga={v} metros={m} onClick={() => navegar(`/barraca/${b.numero}`)} />
+          <CardBarraca key={b.id} foto barraca={b} vaga={v} metros={m} onClick={() => navegar(`/barraca/${b.numero}`)} />
         ))}
       </BottomSheet>
     </div>

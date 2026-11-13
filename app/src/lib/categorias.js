@@ -1,7 +1,7 @@
 export const CATEGORIAS = {
-  hortifruti: { nome: 'Hortifruti' },
   comida: { nome: 'Comida' },
-  carnes: { nome: 'Carnes e peixes' },
+  bebidas: { nome: 'Bebidas' },
+  doces: { nome: 'Doces' },
   artesanato: { nome: 'Artesanato' },
   outros: { nome: 'Outros' },
 };
@@ -17,13 +17,22 @@ export const tomDa = categoria => `var(--cat-${categoria}-t)`;
 
 export const normalizar = s => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 
-/** Busca por nome, produto, categoria ou forma de pagamento. */
+export const preco = valor => valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+/** Busca por nome, produto, item do cardápio, categoria ou forma de pagamento. */
 export function buscarBarracas(barracas, termo) {
   const t = normalizar(termo.trim());
   if (!t) return [];
   return barracas.filter(b => normalizar([
-    b.nome, CATEGORIAS[b.categoria].nome, ...b.produtos, ...b.pagamentos.map(p => PAGAMENTOS[p].nome),
+    b.nome, CATEGORIAS[b.categoria].nome, ...b.produtos, ...(b.cardapio ?? []).map(i => i.nome),
+    ...b.pagamentos.map(p => PAGAMENTOS[p].nome),
   ].join(' ')).includes(t));
+}
+
+/** Primeiro item do cardápio que combina com o termo buscado, para mostrar o preço já no resultado. */
+export function itemDoCardapio(barraca, termo) {
+  const t = normalizar(termo.trim());
+  return t ? (barraca.cardapio ?? []).find(i => normalizar(i.nome).includes(t)) ?? null : null;
 }
 
 export function hojeEmSaoPaulo() {

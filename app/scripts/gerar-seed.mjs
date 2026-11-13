@@ -22,8 +22,8 @@ linhas.push(`insert into feiras (slug, nome, endereco, horario, origem_lat, orig
 linhas.push('insert into vagas (feira_id, codigo, fileira, corredor, lado, ordem, x_m, y_m, larg_m, alt_m) values');
 linhas.push(vagas.map(v => `  (${F}, ${q(v.codigo)}, ${q(v.fileira)}, ${v.corredor}, ${q(v.lado)}, ${v.ordem}, ${v.x_m}, ${v.y_m}, ${v.larg_m}, ${v.alt_m})`).join(',\n') + ';');
 
-linhas.push('insert into barracas (feira_id, numero, nome, categoria, icone, produtos, pagamentos, vaga_habitual_id) values');
-linhas.push(barracas.map(b => `  (${F}, ${b.numero}, ${q(b.nome)}, ${q(b.categoria)}, ${q(b.icone)}, ${arr(b.produtos)}, ${arr(b.pagamentos)}, (select id from vagas where feira_id = ${F} and codigo = ${q(codigoDe[b.vaga_habitual_id])}))`).join(',\n') + ';');
+linhas.push('insert into barracas (feira_id, numero, nome, categoria, icone, produtos, pagamentos, cardapio, vaga_habitual_id) values');
+linhas.push(barracas.map(b => `  (${F}, ${b.numero}, ${q(b.nome)}, ${q(b.categoria)}, ${q(b.icone)}, ${arr(b.produtos)}, ${arr(b.pagamentos)}, ${q(JSON.stringify(b.cardapio))}::jsonb, (select id from vagas where feira_id = ${F} and codigo = ${q(codigoDe[b.vaga_habitual_id])}))`).join(',\n') + ';');
 
 linhas.push('insert into etiquetas_nfc (uid, barraca_id) values');
 linhas.push(etiquetas.map(e => `  (${q(e.uid)}, (select id from barracas where feira_id = ${F} and numero = ${numeroDe[e.barraca_id]}))`).join(',\n') + ';');

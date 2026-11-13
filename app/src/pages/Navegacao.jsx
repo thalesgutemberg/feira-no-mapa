@@ -81,7 +81,7 @@ export default function Navegacao() {
           {!simulando && <AvisoLocalizacao loc={loc} />}
         </div>
       </div>
-      <div className="acoes-base" style={{ background: '#fff', boxShadow: 'var(--e3)', borderRadius: 'var(--r-lg) var(--r-lg) 0 0', zIndex: 5 }}>
+      <div className="acoes-base" style={{ background: 'var(--surface)', boxShadow: 'var(--e3)', borderRadius: 'var(--r-lg) var(--r-lg) 0 0', zIndex: 5 }}>
         <div className="row" style={{ gap: 14 }}>
           <Selo barraca={barraca} tamanho={44} />
           <div><b>{barraca.nome}</b><div className="t-caption">Vaga {vaga.codigo} · {barraca.pagamentos.map(p => PAGAMENTOS[p].nome).join(' · ')}</div></div>

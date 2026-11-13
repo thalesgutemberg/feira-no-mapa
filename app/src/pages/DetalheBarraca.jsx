@@ -3,14 +3,15 @@ import { useNavigate, useParams } from 'react-router-dom';
 import FeiraMap from '../components/FeiraMap.jsx';
 import BottomSheet from '../components/BottomSheet.jsx';
 import Icon from '../components/Icon.jsx';
-import { CardBarraca, FotoPadrao, Pagamentos, Selo } from '../components/Barraca.jsx';
+import { CardBarraca, Cardapio, Pagamentos, Selo } from '../components/Barraca.jsx';
 import { Banner } from '../components/Avisos.jsx';
 import { useFeira } from '../data/FeiraContext.jsx';
 import { useLocalizacao } from '../data/LocalizacaoContext.jsx';
-import { CATEGORIAS } from '../lib/categorias.js';
+import { CATEGORIAS, corDa } from '../lib/categorias.js';
+import { fundoDa } from '../lib/fotos.js';
 import { calcularRota, frenteDaVaga, metrosAte } from '../lib/rota.js';
 
-const SHEET = 440;
+const SHEET = 520;
 
 export default function DetalheBarraca() {
   const { numero } = useParams();
@@ -54,15 +55,15 @@ export default function DetalheBarraca() {
       <BottomSheet alturas={[160, SHEET, 760]} inicial={1}>
         {vaga ? (
           <>
-            <FotoPadrao barraca={barraca} />
-            <div className="row" style={{ alignItems: 'flex-start', gap: 14 }}>
-              <Selo barraca={barraca} />
-              <div style={{ flex: 1 }}>
-                <h1 className="t-sub">{barraca.nome}</h1>
-                <div className="t-caption">{cat} · Corredor {vaga.corredor}, vaga {vaga.codigo}{metros != null ? ` · ${Math.round(metros)} m` : ''}</div>
-              </div>
+            <div className="capa" style={fundoDa(barraca)}>
+              <span className="pilula"><span className="dot" style={{ background: corDa(barraca.categoria) }} />{cat}</span>
             </div>
-            <div><div className="list-title">Vende</div><div className="pays" style={{ marginTop: 6 }}>{barraca.produtos.map(p => <span key={p} className="tag">{p}</span>)}</div></div>
+            <div>
+              <div className="titulo-barraca"><h1>{barraca.nome}</h1><span className="num">Nº {barraca.numero}</span></div>
+              <div className="t-caption" style={{ marginTop: 4 }}>Corredor {vaga.corredor}, vaga {vaga.codigo}{metros != null ? ` · a ${Math.round(metros)} m de você` : ''}</div>
+            </div>
+            <div className="pays">{barraca.produtos.map(p => <span key={p} className="tag">{p}</span>)}</div>
+            <Cardapio barraca={barraca} />
             <div><div className="list-title">Pagamento</div><div style={{ marginTop: 6 }}><Pagamentos barraca={barraca} /></div></div>
             <button className="btn btn-primary btn-block cta-fixo" onClick={() => navegar(`/ir/${barraca.numero}`)}>
               <Icon nome="route" />Ir até lá{metros != null ? ` · ${Math.round(metros)} m` : ''}
@@ -76,7 +77,7 @@ export default function DetalheBarraca() {
             </div>
             <Banner tipo="alerta" icone="info" titulo="Esta barraca não veio hoje">A etiqueta dela ainda não foi lida na montagem desta feira.</Banner>
             {parecidas.length > 0 && <div className="list-title">Também vendem algo parecido</div>}
-            {parecidas.map(({ b, v, m }) => <CardBarraca key={b.id} barraca={b} vaga={v} metros={m} onClick={() => navegar(`/barraca/${b.numero}`)} />)}
+            {parecidas.map(({ b, v, m }) => <CardBarraca key={b.id} foto barraca={b} vaga={v} metros={m} onClick={() => navegar(`/barraca/${b.numero}`)} />)}
           </>
         )}
       </BottomSheet>
